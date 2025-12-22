@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"html/template"
+	"item-archive-d/internal/db"
 	"net/http"
 	"path"
 	"strconv"
@@ -115,21 +116,21 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 	if err != nil {
 		panic(err)
 	}
-	return "/_search", withError(func(w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_search", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		ctx := r.Context()
 		err = r.ParseForm()
 		if err != nil {
 			return
 		}
 		query := r.Form.Get("q")
-		resources, err := c.qry.Search(ctx, query)
+		resources, err := txqry.Search(ctx, query)
 		if err != nil {
 			return
 		}
 		rows := make([]SearchProps_Row, len(resources))
 		for i, r := range resources {
 			var segments []string
-			segments, err = c.qry.GetPath(ctx, r.ID)
+			segments, err = txqry.GetPath(ctx, r.ID)
 			if err != nil {
 				return
 			}

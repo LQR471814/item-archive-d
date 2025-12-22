@@ -54,36 +54,6 @@ const list_template = `<!DOCTYPE html>
 	</style>
 </head>
 
-{{define "form"}}
-	<form action="" method="post" enctype="multipart/form-data">
-		<h4>{{.}}</h4>
-		<div>
-			<label for="name">Name:</label>
-			<input type="text" name="name" id="name" placeholder="Resource name">
-		</div>
-		<div>
-			<label for="color">Color:</label>
-			<input type="text" name="color" id="color" placeholder="Physical color">
-		</div>
-		<div>
-			<label for="comments">Comments:</label>
-			<textarea name="comments" id="comments" placeholder="Comments"></textarea>
-		</div>
-		<div>
-			<label for="image">Image:</label>
-			<input type="file" name="image" id="image">
-		</div>
-		<div>
-			<label for="type">Type:</label>
-			<select name="type" id="type-select">
-				<option value="item" selected>Item</option>
-				<option value="container">Container</option>
-			</select>
-		</div>
-		<input type="submit" value="Submit">
-	</form>
-{{end}}
-
 <body>
 	<div style="display: flex; gap: 0.1rem; flex-wrap: wrap;">
 		<a href="/">&lt;home&gt;</a>
@@ -149,7 +119,33 @@ const list_template = `<!DOCTYPE html>
 
 	<hr>
 
-	{{template "form" "New Item"}}
+	<form action="" method="post" enctype="multipart/form-data">
+		<h4>New Item</h4>
+		<div>
+			<label for="name">Name:</label>
+			<input type="text" name="name" id="name" placeholder="Resource name" required>
+		</div>
+		<div>
+			<label for="color">Color:</label>
+			<input type="text" name="color" id="color" placeholder="Physical color">
+		</div>
+		<div>
+			<label for="comments">Comments:</label>
+			<textarea name="comments" id="comments" placeholder="Comments"></textarea>
+		</div>
+		<div>
+			<label for="image">Image:</label>
+			<input type="file" name="image" id="image">
+		</div>
+		<div>
+			<label for="type">Type:</label>
+			<select name="type" id="type-select">
+				<option value="item" selected>Item</option>
+				<option value="container">Container</option>
+			</select>
+		</div>
+		<input type="submit" value="Submit">
+	</form>
 </body>
 </html>`
 
@@ -175,10 +171,10 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 	if err != nil {
 		panic(err)
 	}
-	return "/", withError(func(w http.ResponseWriter, r *http.Request) (err error) {
+	return "/", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		p := path.Join("/", r.URL.Path)
 
-		parentID, err := c.qry.Resolve(r.Context(), p)
+		parentID, err := txqry.Resolve(r.Context(), p)
 		if errors.Is(err, sql.ErrNoRows) {
 			err = fmt.Errorf("unknown resource: %s", r.URL.Path)
 			return
@@ -205,7 +201,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				return
 			}
 
-			_, err = c.qry.CreateResource(r.Context(), db.CreateResourceParams{
+			_, err = txqry.CreateResource(r.Context(), db.CreateResourceParams{
 				ParentID: parentID,
 				Name:     name,
 				Color:    color,
@@ -221,7 +217,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			return
 		}
 
-		rows, err := c.qry.ListResources(r.Context(), parentID)
+		rows, err := txqry.ListResources(r.Context(), parentID)
 		if err != nil {
 			return
 		}

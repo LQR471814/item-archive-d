@@ -26,6 +26,10 @@ where id = ?;
 select * from resource
 where parent_id is ?;
 
+-- name: GetResource :one
+select * from resource
+where id = ?;
+
 -- name: DeleteResource :exec
 delete from resource
 where id = ?;

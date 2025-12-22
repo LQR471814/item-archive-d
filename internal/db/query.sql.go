@@ -49,6 +49,26 @@ func (q *Queries) DeleteResource(ctx context.Context, id int64) error {
 	return err
 }
 
+const getResource = `-- name: GetResource :one
+select id, parent_id, name, type, color, comments, image from resource
+where id = ?
+`
+
+func (q *Queries) GetResource(ctx context.Context, id int64) (Resource, error) {
+	row := q.db.QueryRowContext(ctx, getResource, id)
+	var i Resource
+	err := row.Scan(
+		&i.ID,
+		&i.ParentID,
+		&i.Name,
+		&i.Type,
+		&i.Color,
+		&i.Comments,
+		&i.Image,
+	)
+	return i, err
+}
+
 const listResources = `-- name: ListResources :many
 select id, parent_id, name, type, color, comments, image from resource
 where parent_id is ?

@@ -7,7 +7,7 @@ import (
 )
 
 func (c Context) Image() (string, func(w http.ResponseWriter, r *http.Request)) {
-	return "/_image/{id}", withError(func(w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_image/{id}", c.withError(func(w http.ResponseWriter, r *http.Request) (err error) {
 		id, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
 		if err != nil {
 			return

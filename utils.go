@@ -3,13 +3,43 @@ package main
 import (
 	"database/sql"
 	"item-archive-d/internal/blob"
+	"item-archive-d/internal/db"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"unsafe"
 )
 
-func withError(fn func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) {
+func (c Context) withTx(fn func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		tx, err := c.driver.BeginTx(ctx, nil)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(500)
+			log.Println(err)
+			return
+		}
+		defer tx.Rollback()
+		txqry := c.qry.WithTx(tx)
+		err = fn(txqry, w, r)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(500)
+			log.Println(err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(500)
+			log.Println(err)
+			return
+		}
+	}
+}
+
+func (c Context) withError(fn func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := fn(w, r)
 		if err != nil {

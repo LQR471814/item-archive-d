@@ -58,18 +58,18 @@ const list_template = `<html>
 
 {{define "form"}}
 	<form action="" method="post" enctype="multipart/form-data">
-		<h4 style="">{{.}}</h4>
+		<h4>{{.}}</h4>
 		<div>
 			<label for="name">Name:</label>
-			<input type="text" name="name" id="name" required />
+			<input type="text" name="name" id="name" placeholder="Resource name" required />
 		</div>
 		<div>
 			<label for="color">Color:</label>
-			<input type="text" name="color" id="color" />
+			<input type="text" name="color" id="color" placeholder="Physical color" />
 		</div>
 		<div>
 			<label for="comments">Comments:</label>
-			<input type="text" name="comments" id="comments" />
+			<textarea name="comments" id="comments" placeholder="Comments"></textarea>
 		</div>
 		<div>
 			<label for="image">Image:</label>
@@ -94,6 +94,15 @@ const list_template = `<html>
 		<a href="{{.Location}}">{{.Name}}</a>
 		<span>/</span>
 		{{end}}
+	</div>
+
+	<hr>
+
+	<div>
+		<form action="/search" method="get">
+			<h4><label for="query">Search</label></h4>
+			<input type="text" name="query" id="query" placeholder="Search query..." required />
+		</form>
 	</div>
 
 	<hr>
@@ -142,8 +151,6 @@ const list_template = `<html>
 	<hr>
 
 	{{template "form" "New Item"}}
-
-	<hr>
 </body>
 </html>
 `
@@ -157,7 +164,8 @@ func makePathSegments(p string) (out []ListProps_PathSegment) {
 		}
 		accumulated = path.Join(accumulated, s)
 		out = append(out, ListProps_PathSegment{
-			Location: accumulated,
+			// trailing slash must be included, otherwise ".." href breaks
+			Location: accumulated + "/",
 			Name:     s,
 		})
 	}

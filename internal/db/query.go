@@ -68,27 +68,31 @@ order by current_step desc
 limit 1`
 
 func (q *Queries) Resolve(ctx context.Context, path string) (out sql.NullInt64, err error) {
-	var pathValues strings.Builder
+	var args []any
+	var pathArgs strings.Builder
 	i := 1
 	for s := range strings.SplitSeq(path, "/") {
 		if s == "" {
 			continue
 		}
+		args = append(args, s)
 		if i != 1 {
-			pathValues.WriteString(", ")
+			pathArgs.WriteString(",")
 		}
-		pathValues.WriteString("(")
-		pathValues.WriteString(strconv.Itoa(i))
-		pathValues.WriteString(",'")
-		pathValues.WriteString(s)
-		pathValues.WriteString("')")
+		pathArgs.WriteString("(")
+		pathArgs.WriteString(strconv.Itoa(i))
+		pathArgs.WriteString(",?)")
 		i++
 	}
-	if pathValues.String() == "" {
+	if pathArgs.String() == "" {
 		return
 	}
-	query := strings.Replace(resolve, "/*values*/", pathValues.String(), 1)
-	row := q.db.QueryRowContext(ctx, query)
+	// we only dynamically generate the part of the query with the argument
+	// placeholders and then use the generated placeholders to call the query
+	// to prevent sql injection from happening
+	query := strings.Replace(resolve, "/*values*/", pathArgs.String(), 1)
+
+	row := q.db.QueryRowContext(ctx, query, args...)
 	var id int64
 	err = row.Scan(&id)
 	if err != nil {

@@ -9,8 +9,12 @@ set
 	name = ?,
 	type = ?,
 	color = ?,
-	comments = ?,
-	image = ?
+	comments = ?
+where id = ?;
+
+-- name: UpdateResourceImage :exec
+update resource
+set image = ?
 where id = ?;
 
 -- name: MoveResource :exec
@@ -25,10 +29,6 @@ where parent_id is ?;
 -- name: DeleteResource :exec
 delete from resource
 where id = ?;
-
--- name: GetResourceID :one
-select id from resource
-where parent_id is ? and name = ?;
 
 -- name: MakeTrash :exec
 insert into resource (id, name, type)

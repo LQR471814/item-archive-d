@@ -49,23 +49,6 @@ func (q *Queries) DeleteResource(ctx context.Context, id int64) error {
 	return err
 }
 
-const getResourceID = `-- name: GetResourceID :one
-select id from resource
-where parent_id is ? and name = ?
-`
-
-type GetResourceIDParams struct {
-	ParentID sql.NullInt64
-	Name     string
-}
-
-func (q *Queries) GetResourceID(ctx context.Context, arg GetResourceIDParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getResourceID, arg.ParentID, arg.Name)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
 const listResources = `-- name: ListResources :many
 select id, parent_id, name, type, color, comments, image from resource
 where parent_id is ?
@@ -134,8 +117,7 @@ set
 	name = ?,
 	type = ?,
 	color = ?,
-	comments = ?,
-	image = ?
+	comments = ?
 where id = ?
 `
 
@@ -144,7 +126,6 @@ type UpdateResourceParams struct {
 	Type     string
 	Color    string
 	Comments string
-	Image    sql.NullInt64
 	ID       int64
 }
 
@@ -154,8 +135,23 @@ func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) 
 		arg.Type,
 		arg.Color,
 		arg.Comments,
-		arg.Image,
 		arg.ID,
 	)
+	return err
+}
+
+const updateResourceImage = `-- name: UpdateResourceImage :exec
+update resource
+set image = ?
+where id = ?
+`
+
+type UpdateResourceImageParams struct {
+	Image sql.NullInt64
+	ID    int64
+}
+
+func (q *Queries) UpdateResourceImage(ctx context.Context, arg UpdateResourceImageParams) error {
+	_, err := q.db.ExecContext(ctx, updateResourceImage, arg.Image, arg.ID)
 	return err
 }

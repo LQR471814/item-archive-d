@@ -16,7 +16,8 @@ create virtual table resource_fts using fts5(
 	color,
 	comments,
 	content=resource,
-	content_rowid=id
+	content_rowid=id,
+	tokenize='trigram'
 );
 
 create trigger resource_ai after insert on resource begin

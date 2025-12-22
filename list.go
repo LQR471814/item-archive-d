@@ -246,10 +246,10 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				Name: r.Name,
 				// trailing slash must be included, otherwise ".." href breaks
 				NameHref:   path.Join(p, r.Name) + "/",
-				IsItem:     r.Type.String == "item",
-				Type:       r.Type.String,
-				Color:      r.Color.String,
-				Comments:   r.Comments.String,
+				IsItem:     r.Type == "item",
+				Type:       r.Type,
+				Color:      r.Color,
+				Comments:   r.Comments,
 				EditHref:   path.Join("/_edit", p, r.Name),
 				DeleteHref: path.Join("/_delete", p, r.Name),
 			}

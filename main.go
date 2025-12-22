@@ -39,7 +39,6 @@ func main() {
 		qry:    qry,
 		blobs:  blob.Store{Dir: "blobs"},
 	}
-	mux.HandleFunc(router.ResourceResolve())
 	mux.HandleFunc(router.Search())
 	mux.HandleFunc(router.Image())
 	mux.HandleFunc(router.Delete())

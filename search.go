@@ -135,8 +135,8 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 				Name:       r.Name,
 				NameHref:   fullPath,
 				ParentHref: parent,
-				Color:      r.Color.String,
-				Comments:   r.Comments.String,
+				Color:      r.Color,
+				Comments:   r.Comments,
 			}
 			if r.Image.Valid {
 				id := strconv.FormatUint(toUint(r.Image.Int64), 10)

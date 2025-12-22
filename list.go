@@ -21,7 +21,6 @@ type ListProps_Row struct {
 	IsItem     bool
 	Name       string
 	NameHref   string
-	Type       string
 	Color      string
 	Comments   string
 	ImageSrc   sql.NullString
@@ -247,7 +246,6 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				// trailing slash must be included, otherwise ".." href breaks
 				NameHref:   path.Join(p, r.Name) + "/",
 				IsItem:     r.Type == "item",
-				Type:       r.Type,
 				Color:      r.Color,
 				Comments:   r.Comments,
 				EditHref:   path.Join("/_edit", p, r.Name),

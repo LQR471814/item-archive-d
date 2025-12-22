@@ -101,7 +101,7 @@ func (q *Queries) Resolve(ctx context.Context, path string) (out sql.NullInt64, 
 const getLink = `with recursive
 	found as (
 		select
-			id,
+			parent_id,
 			name,
 			1 as step
 		from resource
@@ -110,7 +110,7 @@ const getLink = `with recursive
 		union all
 
 		select
-			resource.id,
+			resource.parent_id,
 			resource.name,
 			1 + found.step
 		from resource
@@ -119,7 +119,7 @@ const getLink = `with recursive
 			resource.id = found.parent_id
 	)
 
-select id from found
+select name from found
 order by step desc`
 
 func (q *Queries) GetPath(ctx context.Context, id int64) (path []string, err error) {
@@ -128,10 +128,8 @@ func (q *Queries) GetPath(ctx context.Context, id int64) (path []string, err err
 		return
 	}
 	for rows.Next() {
-		var id int64
 		var name string
-		var step int64
-		err = rows.Scan(&id, &name, &step)
+		err = rows.Scan(&name)
 		if err != nil {
 			return
 		}

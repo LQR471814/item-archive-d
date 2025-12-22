@@ -10,6 +10,7 @@ import (
 )
 
 type SearchProps_Row struct {
+	IsItem     bool
 	Name       string
 	NameHref   string
 	ParentHref string
@@ -87,8 +88,12 @@ const search_template = `<!DOCTYPE html>
 			<tbody>
 				{{range .Rows}}
 				<tr>
-					<td><a href="{{.ParentHref}}">{{.ParentHref}}/</a></td>
-					<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
+					<td><a href="{{.ParentHref}}">{{.ParentHref}}</a></td>
+					{{if .IsItem}}
+						<td>{{.Name}}</td>
+					{{else}}
+						<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
+					{{end}}
 					<td>{{.Color}}</td>
 					<td>{{.Comments}}</td>
 					<td>
@@ -132,6 +137,7 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 			parent := strings.Join(segments[:len(segments)-1], "/") + "/"
 
 			rows[i] = SearchProps_Row{
+				IsItem:     r.Type == "item",
 				Name:       r.Name,
 				NameHref:   fullPath,
 				ParentHref: parent,

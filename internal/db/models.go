@@ -17,3 +17,9 @@ type Resource struct {
 	Comments sql.NullString
 	Image    sql.NullInt64
 }
+
+type ResourceFt struct {
+	Name     string
+	Color    string
+	Comments string
+}

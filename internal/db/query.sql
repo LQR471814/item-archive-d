@@ -18,7 +18,7 @@ set parent_id = ?
 where id = ?;
 
 -- name: ListResources :many
-select id, name, type, color, comments, image from resource
+select * from resource
 where parent_id is ?;
 
 -- name: DeleteResource :exec
@@ -28,4 +28,8 @@ where id = ?;
 -- name: GetResourceID :one
 select id from resource
 where parent_id is ? and name = ?;
+
+-- name: MakeTrash :exec
+insert into resource (id, name, type)
+values (1, "__Trash__", "container");
 

@@ -36,13 +36,10 @@ rows, increment the found child's current_step by 1.
 */
 
 const resolve = `with recursive
-	-- columns: step, name
 	paths(step, name) as (
 		values /*values*/
 	),
-	-- columns: id
 	found as (
-		-- anchor (base case): get first resource
 		select
 			resource.id,
 			1 as current_step
@@ -55,7 +52,6 @@ const resolve = `with recursive
 
 		union all
 
-		-- recursive step
 		select
 			resource.id,
 			found.current_step + 1
@@ -67,7 +63,6 @@ const resolve = `with recursive
 			found.current_step + 1 = paths.step
 	)
 
--- final select
 select id from found
 order by current_step desc
 limit 1`
@@ -101,4 +96,82 @@ func (q *Queries) Resolve(ctx context.Context, path string) (out sql.NullInt64, 
 	}
 	out = sql.NullInt64{Int64: id, Valid: true}
 	return
+}
+
+const getLink = `with recursive
+	found as (
+		select
+			id,
+			name,
+			1 as step
+		from resource
+		where resource.id = ?
+
+		union all
+
+		select
+			resource.id,
+			resource.name,
+			1 + found.step
+		from resource
+		join found
+		where
+			resource.id = found.parent_id
+	)
+
+select id from found
+order by step desc`
+
+func (q *Queries) GetLink(ctx context.Context, id uint64) (path []string, err error) {
+	rows, err := q.db.QueryContext(ctx, getLink)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var id int64
+		var name string
+		var step int64
+		err = rows.Scan(&id, &name, &step)
+		if err != nil {
+			return
+		}
+		path = append(path, name)
+	}
+	return
+}
+
+const search = `select resource.* from resource
+join resource_fts on resource.id = resource_fts.rowid
+where resource_fts match ?
+order by rank`
+
+func (q *Queries) Search(ctx context.Context, query string) ([]Resource, error) {
+	rows, err := q.db.QueryContext(ctx, search, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Resource
+	for rows.Next() {
+		var i Resource
+		if err := rows.Scan(
+			&i.ID,
+			&i.ParentID,
+			&i.Name,
+			&i.Type,
+			&i.Color,
+			&i.Comments,
+			&i.Image,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

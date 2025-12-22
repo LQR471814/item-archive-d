@@ -67,30 +67,22 @@ func (q *Queries) GetResourceID(ctx context.Context, arg GetResourceIDParams) (i
 }
 
 const listResources = `-- name: ListResources :many
-select id, name, type, color, comments, image from resource
+select id, parent_id, name, type, color, comments, image from resource
 where parent_id is ?
 `
 
-type ListResourcesRow struct {
-	ID       int64
-	Name     string
-	Type     sql.NullString
-	Color    sql.NullString
-	Comments sql.NullString
-	Image    sql.NullInt64
-}
-
-func (q *Queries) ListResources(ctx context.Context, parentID sql.NullInt64) ([]ListResourcesRow, error) {
+func (q *Queries) ListResources(ctx context.Context, parentID sql.NullInt64) ([]Resource, error) {
 	rows, err := q.db.QueryContext(ctx, listResources, parentID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListResourcesRow
+	var items []Resource
 	for rows.Next() {
-		var i ListResourcesRow
+		var i Resource
 		if err := rows.Scan(
 			&i.ID,
+			&i.ParentID,
 			&i.Name,
 			&i.Type,
 			&i.Color,
@@ -108,6 +100,16 @@ func (q *Queries) ListResources(ctx context.Context, parentID sql.NullInt64) ([]
 		return nil, err
 	}
 	return items, nil
+}
+
+const makeTrash = `-- name: MakeTrash :exec
+insert into resource (id, name, type)
+values (1, "__Trash__", "container")
+`
+
+func (q *Queries) MakeTrash(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, makeTrash)
+	return err
 }
 
 const moveResource = `-- name: MoveResource :exec

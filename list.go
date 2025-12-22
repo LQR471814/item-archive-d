@@ -38,7 +38,8 @@ type ListProps struct {
 	Rows         []ListProps_Row
 }
 
-const list_template = `<html>
+const list_template = `<!DOCTYPE html>
+<html>
 <head>
 	<title>Item Archive: {{.Path}}</title>
 	<style>
@@ -61,11 +62,11 @@ const list_template = `<html>
 		<h4>{{.}}</h4>
 		<div>
 			<label for="name">Name:</label>
-			<input type="text" name="name" id="name" placeholder="Resource name" required />
+			<input type="text" name="name" id="name" placeholder="Resource name" required>
 		</div>
 		<div>
 			<label for="color">Color:</label>
-			<input type="text" name="color" id="color" placeholder="Physical color" />
+			<input type="text" name="color" id="color" placeholder="Physical color">
 		</div>
 		<div>
 			<label for="comments">Comments:</label>
@@ -73,7 +74,7 @@ const list_template = `<html>
 		</div>
 		<div>
 			<label for="image">Image:</label>
-			<input type="file" name="image" id="image" />
+			<input type="file" name="image" id="image">
 		</div>
 		<div>
 			<label for="type">Type:</label>
@@ -82,7 +83,7 @@ const list_template = `<html>
 				<option value="container">Container</option>
 			</select>
 		</div>
-		<input type="submit" value="Submit" />
+		<input type="submit" value="Submit">
 	</form>
 {{end}}
 
@@ -99,9 +100,10 @@ const list_template = `<html>
 	<hr>
 
 	<div>
-		<form action="/search" method="get">
-			<h4><label for="query">Search</label></h4>
-			<input type="text" name="query" id="query" placeholder="Search query..." required />
+		<form action="/_search" method="get">
+			<h4><label for="q">Search</label></h4>
+			<input type="text" name="q" id="q" placeholder="Search query..." required>
+			<input type="submit" value="Submit">
 		</form>
 	</div>
 
@@ -152,8 +154,7 @@ const list_template = `<html>
 
 	{{template "form" "New Item"}}
 </body>
-</html>
-`
+</html>`
 
 func makePathSegments(p string) (out []ListProps_PathSegment) {
 	segments := strings.Split(p, "/")

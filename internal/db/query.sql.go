@@ -19,9 +19,9 @@ returning id
 type CreateResourceParams struct {
 	ParentID sql.NullInt64
 	Name     string
-	Type     sql.NullString
-	Color    sql.NullString
-	Comments sql.NullString
+	Type     string
+	Color    string
+	Comments string
 	Image    sql.NullInt64
 }
 
@@ -131,6 +131,7 @@ func (q *Queries) MoveResource(ctx context.Context, arg MoveResourceParams) erro
 const updateResource = `-- name: UpdateResource :exec
 update resource
 set
+	name = ?,
 	type = ?,
 	color = ?,
 	comments = ?,
@@ -139,15 +140,17 @@ where id = ?
 `
 
 type UpdateResourceParams struct {
-	Type     sql.NullString
-	Color    sql.NullString
-	Comments sql.NullString
+	Name     string
+	Type     string
+	Color    string
+	Comments string
 	Image    sql.NullInt64
 	ID       int64
 }
 
 func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) error {
 	_, err := q.db.ExecContext(ctx, updateResource,
+		arg.Name,
 		arg.Type,
 		arg.Color,
 		arg.Comments,

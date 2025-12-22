@@ -12,9 +12,9 @@ type Resource struct {
 	ID       int64
 	ParentID sql.NullInt64
 	Name     string
-	Type     sql.NullString
-	Color    sql.NullString
-	Comments sql.NullString
+	Type     string
+	Color    string
+	Comments string
 	Image    sql.NullInt64
 }
 

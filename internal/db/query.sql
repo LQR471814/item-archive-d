@@ -6,6 +6,7 @@ returning id;
 -- name: UpdateResource :exec
 update resource
 set
+	name = ?,
 	type = ?,
 	color = ?,
 	comments = ?,

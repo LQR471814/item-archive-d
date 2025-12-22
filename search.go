@@ -6,14 +6,16 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 )
 
 type SearchProps_Row struct {
-	Name     string
-	NameHref string
-	Color    string
-	Comments string
-	ImageSrc sql.NullString
+	Name       string
+	NameHref   string
+	ParentHref string
+	Color      string
+	Comments   string
+	ImageSrc   sql.NullString
 }
 
 type SearchProps struct {
@@ -76,6 +78,7 @@ const search_template = `<!DOCTYPE html>
 	<div style="height: 100%; overflow-y: auto;">
 		<table>
 			<thead style="position: sticky; top: 0; background: white;">
+				<th>Parent</th>
 				<th>Name</th>
 				<th>Color</th>
 				<th>Comments</th>
@@ -84,6 +87,7 @@ const search_template = `<!DOCTYPE html>
 			<tbody>
 				{{range .Rows}}
 				<tr>
+					<td><a href="{{.ParentHref}}">{{.ParentHref}}/</a></td>
 					<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
 					<td>{{.Color}}</td>
 					<td>{{.Comments}}</td>
@@ -107,22 +111,32 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 		panic(err)
 	}
 	return "/_search", withError(func(w http.ResponseWriter, r *http.Request) (err error) {
+		ctx := r.Context()
 		err = r.ParseForm()
 		if err != nil {
 			return
 		}
 		query := r.Form.Get("q")
-		resources, err := c.qry.Search(r.Context(), query)
+		resources, err := c.qry.Search(ctx, query)
 		if err != nil {
 			return
 		}
 		rows := make([]SearchProps_Row, len(resources))
 		for i, r := range resources {
+			var segments []string
+			segments, err = c.qry.GetPath(ctx, r.ID)
+			if err != nil {
+				return
+			}
+			fullPath := strings.Join(segments, "/") + "/"
+			parent := strings.Join(segments[:len(segments)-1], "/") + "/"
+
 			rows[i] = SearchProps_Row{
-				Name:     r.Name,
-				NameHref: path.Join("/_resource", strconv.FormatUint(toUint(r.ID), 10)),
-				Color:    r.Color.String,
-				Comments: r.Comments.String,
+				Name:       r.Name,
+				NameHref:   fullPath,
+				ParentHref: parent,
+				Color:      r.Color.String,
+				Comments:   r.Comments.String,
 			}
 			if r.Image.Valid {
 				id := strconv.FormatUint(toUint(r.Image.Int64), 10)

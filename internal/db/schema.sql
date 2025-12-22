@@ -5,9 +5,9 @@ create table resource (
 		on delete cascade,
 
 	name text not null,
-	type text,
-	color text,
-	comments text,
+	type text not null,
+	color text not null,
+	comments text not null,
 	image integer
 );
 

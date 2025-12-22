@@ -43,8 +43,8 @@ func loadDir(ctx context.Context, txqry *db.Queries, cwd string, parentId int64)
 		id, err := txqry.CreateResource(ctx, db.CreateResourceParams{
 			Name:     name,
 			ParentID: parent,
-			Type:     sql.NullString{String: macrotype, Valid: true},
-			Comments: sql.NullString{String: tags, Valid: true},
+			Type:     macrotype,
+			Comments: tags,
 		})
 		if err != nil {
 			panic(err)

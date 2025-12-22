@@ -122,8 +122,8 @@ const getLink = `with recursive
 select id from found
 order by step desc`
 
-func (q *Queries) GetLink(ctx context.Context, id uint64) (path []string, err error) {
-	rows, err := q.db.QueryContext(ctx, getLink)
+func (q *Queries) GetPath(ctx context.Context, id int64) (path []string, err error) {
+	rows, err := q.db.QueryContext(ctx, getLink, id)
 	if err != nil {
 		return
 	}

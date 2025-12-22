@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"html/template"
 	"item-archive-d/internal/db"
-	"mime/multipart"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 type ListProps_PathSegment struct {
@@ -62,7 +60,7 @@ const list_template = `<!DOCTYPE html>
 		<h4>{{.}}</h4>
 		<div>
 			<label for="name">Name:</label>
-			<input type="text" name="name" id="name" placeholder="Resource name" required>
+			<input type="text" name="name" id="name" placeholder="Resource name">
 		</div>
 		<div>
 			<label for="color">Color:</label>
@@ -215,29 +213,19 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			comments := first(r.MultipartForm.Value, "comments")
 			image := first(r.MultipartForm.File, "image")
 
-			var imageField sql.NullInt64
-			if image != nil {
-				var file multipart.File
-				file, err = image.Open()
-				if err != nil {
-					return
-				}
-				var imageId uint64
-				imageId, err = c.blobs.Store(file)
-				if err != nil {
-					return
-				}
-				// cast directly into int64 without changing the underlying bytes
-				imageField = sql.NullInt64{Int64: *(*int64)(unsafe.Pointer(&imageId)), Valid: true}
+			var imageID sql.NullInt64
+			imageID, err = handleImageUpload(c.blobs, image)
+			if err != nil {
+				return
 			}
 
 			_, err = c.qry.CreateResource(r.Context(), db.CreateResourceParams{
 				ParentID: parentID,
 				Name:     name,
-				Color:    sql.NullString{String: color, Valid: true},
-				Type:     sql.NullString{String: resourceType, Valid: true},
-				Comments: sql.NullString{String: comments, Valid: true},
-				Image:    imageField,
+				Color:    color,
+				Type:     resourceType,
+				Comments: comments,
+				Image:    imageID,
 			})
 			if err != nil {
 				return
@@ -266,7 +254,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				DeleteHref: path.Join("/_delete", p, r.Name),
 			}
 			if r.Image.Valid {
-				id := strconv.FormatUint(*(*uint64)(unsafe.Pointer(&r.Image.Int64)), 10)
+				id := strconv.FormatUint(toUint(r.Image.Int64), 10)
 				listRows[i].ImageSrc = sql.NullString{
 					String: path.Join("/_image", id),
 					Valid:  true,

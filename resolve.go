@@ -12,7 +12,7 @@ func (c Context) ResourceResolve() (string, func(w http.ResponseWriter, r *http.
 		if err != nil {
 			return
 		}
-		path, err := c.qry.GetLink(r.Context(), id)
+		path, err := c.qry.GetPath(r.Context(), id)
 		if err != nil {
 			return
 		}

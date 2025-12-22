@@ -53,6 +53,9 @@ func (c Context) withError(fn func(w http.ResponseWriter, r *http.Request) error
 // trailingPath adds a trailing '/' to the given path if it does not already
 // exist
 func trailingPath(p string) string {
+	if p == "" {
+		return "/"
+	}
 	if p[len(p)-1] == '/' {
 		return p
 	}

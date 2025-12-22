@@ -170,19 +170,6 @@ func makePathSegments(p string) (out []ListProps_PathSegment) {
 	return
 }
 
-func first[T any](m map[string][]T, key string) T {
-	list, ok := m[key]
-	if !ok {
-		var zero T
-		return zero
-	}
-	if len(list) == 0 {
-		var zero T
-		return zero
-	}
-	return list[0]
-}
-
 func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 	tmpl, err := template.New("list").Parse(list_template)
 	if err != nil {

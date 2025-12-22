@@ -47,3 +47,16 @@ func handleImageUpload(blobs blob.Store, img *multipart.FileHeader) (id sql.Null
 	id = sql.NullInt64{Int64: toInt(imageId), Valid: true}
 	return
 }
+
+func first[T any](m map[string][]T, key string) T {
+	list, ok := m[key]
+	if !ok {
+		var zero T
+		return zero
+	}
+	if len(list) == 0 {
+		var zero T
+		return zero
+	}
+	return list[0]
+}

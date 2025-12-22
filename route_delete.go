@@ -14,15 +14,15 @@ func (c Context) Delete() (string, func(w http.ResponseWriter, r *http.Request))
 			return
 		}
 		if !id.Valid {
-			w.Write([]byte("Cannot delete non-existant resource."))
 			w.WriteHeader(400)
+			w.Write([]byte("Cannot delete non-existant resource."))
 			return
 		}
 		err = txqry.DeleteResource(r.Context(), id.Int64)
 		if err != nil {
 			return
 		}
-		w.Header().Set("Location", path.Join("/", path.Dir(p))+"/")
+		w.Header().Set("Location", trailingPath(path.Dir(p)))
 		w.WriteHeader(303)
 		return
 	})

@@ -134,8 +134,8 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 			if err != nil {
 				return
 			}
-			fullPath := strings.Join(segments, "/") + "/"
-			parent := strings.Join(segments[:len(segments)-1], "/") + "/"
+			fullPath := trailingPath(strings.Join(segments, "/"))
+			parent := trailingPath(strings.Join(segments[:len(segments)-1], "/"))
 
 			rows[i] = SearchProps_Row{
 				IsItem:     r.Type == "item",

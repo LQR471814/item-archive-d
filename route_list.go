@@ -159,7 +159,7 @@ func makePathSegments(p string) (out []ListProps_PathSegment) {
 		accumulated = path.Join(accumulated, s)
 		out = append(out, ListProps_PathSegment{
 			// trailing slash must be included, otherwise ".." href breaks
-			Location: accumulated + "/",
+			Location: trailingPath(accumulated),
 			Name:     s,
 		})
 	}
@@ -227,7 +227,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			listRows[i] = ListProps_Row{
 				Name: r.Name,
 				// trailing slash must be included, otherwise ".." href breaks
-				NameHref:   path.Join(p, r.Name) + "/",
+				NameHref:   trailingPath(path.Join(p, r.Name)),
 				IsItem:     r.Type == "item",
 				Color:      r.Color,
 				Comments:   r.Comments,

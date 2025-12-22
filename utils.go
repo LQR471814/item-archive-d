@@ -15,8 +15,8 @@ func (c Context) withTx(fn func(txqry *db.Queries, w http.ResponseWriter, r *htt
 		ctx := r.Context()
 		tx, err := c.driver.BeginTx(ctx, nil)
 		if err != nil {
-			w.Write([]byte(err.Error()))
 			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
 			log.Println(err)
 			return
 		}
@@ -24,15 +24,15 @@ func (c Context) withTx(fn func(txqry *db.Queries, w http.ResponseWriter, r *htt
 		txqry := c.qry.WithTx(tx)
 		err = fn(txqry, w, r)
 		if err != nil {
-			w.Write([]byte(err.Error()))
 			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
 			log.Println(err)
 			return
 		}
 		err = tx.Commit()
 		if err != nil {
-			w.Write([]byte(err.Error()))
 			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
 			log.Println(err)
 			return
 		}
@@ -48,6 +48,15 @@ func (c Context) withError(fn func(w http.ResponseWriter, r *http.Request) error
 			return
 		}
 	}
+}
+
+// trailingPath adds a trailing '/' to the given path if it does not already
+// exist
+func trailingPath(p string) string {
+	if p[len(p)-1] == '/' {
+		return p
+	}
+	return p + "/"
 }
 
 // toUint converts an integer to a uint without changing the bytes

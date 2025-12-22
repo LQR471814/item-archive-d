@@ -10,6 +10,7 @@ import (
 
 type EditProps struct {
 	Path        string
+	Cancel      string
 	Action      string
 	Name        string
 	Color       string
@@ -34,7 +35,7 @@ const edit_template = `<!DOCTYPE html>
 </head>
 
 <body>
-	<a href="/">&lt;&lt; Cancel</a>
+	<a href="{{.Cancel}}">&lt;&lt; Cancel</a>
 
 	<hr>
 
@@ -77,8 +78,8 @@ func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 	}
 	return "/_edit/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodGet {
-			w.Write([]byte("unsupported method"))
 			w.WriteHeader(400)
+			w.Write([]byte("unsupported method"))
 			return
 		}
 		ctx := r.Context()
@@ -99,6 +100,7 @@ func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 
 		err = tmpl.Execute(w, EditProps{
 			Path:        p,
+			Cancel:      trailingPath(path.Join("/", path.Dir(p))),
 			Action:      path.Join("/_update", p),
 			Name:        resource.Name,
 			Color:       resource.Color,
@@ -113,8 +115,8 @@ func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 func (c Context) Update() (string, func(w http.ResponseWriter, r *http.Request)) {
 	return "/_update/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodPost {
-			w.Write([]byte("unsupported method"))
 			w.WriteHeader(400)
+			w.Write([]byte("unsupported method"))
 			return
 		}
 		ctx := r.Context()
@@ -165,7 +167,7 @@ func (c Context) Update() (string, func(w http.ResponseWriter, r *http.Request))
 			}
 		}
 
-		w.Header().Set("Location", path.Join("/", path.Dir(p))+"/")
+		w.Header().Set("Location", trailingPath(path.Join("/", path.Dir(p))))
 		w.WriteHeader(303)
 		return
 	})

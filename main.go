@@ -41,6 +41,8 @@ func main() {
 	}
 	mux.HandleFunc(router.Search())
 	mux.HandleFunc(router.Image())
+	mux.HandleFunc(router.Edit())
+	mux.HandleFunc(router.Update())
 	mux.HandleFunc(router.Delete())
 	mux.HandleFunc(router.List())
 

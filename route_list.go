@@ -172,9 +172,10 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 		panic(err)
 	}
 	return "/", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+		ctx := r.Context()
 		p := path.Join("/", r.URL.Path)
 
-		parentID, err := txqry.Resolve(r.Context(), p)
+		parentID, err := txqry.Resolve(ctx, p)
 		if errors.Is(err, sql.ErrNoRows) {
 			err = fmt.Errorf("unknown resource: %s", r.URL.Path)
 			return
@@ -201,7 +202,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				return
 			}
 
-			_, err = txqry.CreateResource(r.Context(), db.CreateResourceParams{
+			_, err = txqry.CreateResource(ctx, db.CreateResourceParams{
 				ParentID: parentID,
 				Name:     name,
 				Color:    color,
@@ -217,7 +218,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			return
 		}
 
-		rows, err := txqry.ListResources(r.Context(), parentID)
+		rows, err := txqry.ListResources(ctx, parentID)
 		if err != nil {
 			return
 		}
@@ -232,7 +233,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				Color:      r.Color,
 				Comments:   r.Comments,
 				EditHref:   path.Join("/_edit", p, r.Name),
-				DeleteHref: path.Join("/_delete", p, r.Name),
+				DeleteHref: path.Join("/_delete_confirm", p, r.Name),
 			}
 			if r.Image.Valid {
 				id := strconv.FormatUint(toUint(r.Image.Int64), 10)

@@ -10,6 +10,22 @@ import (
 	"database/sql"
 )
 
+const changeParent = `-- name: ChangeParent :exec
+update resource
+set parent_id = ?1
+where parent_id = ?2
+`
+
+type ChangeParentParams struct {
+	NewParent sql.NullInt64
+	OldParent sql.NullInt64
+}
+
+func (q *Queries) ChangeParent(ctx context.Context, arg ChangeParentParams) error {
+	_, err := q.db.ExecContext(ctx, changeParent, arg.NewParent, arg.OldParent)
+	return err
+}
+
 const createResource = `-- name: CreateResource :one
 insert into resource (parent_id, name, type, color, comments, image)
 values (?, ?, ?, ?, ?, ?)

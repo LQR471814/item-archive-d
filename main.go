@@ -43,7 +43,9 @@ func main() {
 	mux.HandleFunc(router.Image())
 	mux.HandleFunc(router.Edit())
 	mux.HandleFunc(router.Update())
-	mux.HandleFunc(router.Delete())
+	mux.HandleFunc(router.DeleteConfirm())
+	mux.HandleFunc(router.DeleteShallow())
+	mux.HandleFunc(router.DeleteDeep())
 	mux.HandleFunc(router.List())
 
 	srv := &http.Server{

@@ -22,6 +22,11 @@ update resource
 set parent_id = ?
 where id = ?;
 
+-- name: ChangeParent :exec
+update resource
+set parent_id = @new_parent
+where parent_id = @old_parent;
+
 -- name: ListResources :many
 select * from resource
 where parent_id is ?;

@@ -67,9 +67,7 @@ const edit_template = `<!DOCTYPE html>
 		<input type="submit" value="Submit">
 	</form>
 </body>
-</html>
-
-`
+</html>`
 
 func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 	tmpl, err := template.New("edit").Parse(edit_template)

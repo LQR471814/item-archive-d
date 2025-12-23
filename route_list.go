@@ -38,6 +38,7 @@ type ListProps struct {
 const list_template = `<!DOCTYPE html>
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Item Archive: {{.Path}}</title>
 	<style>
 	th, td {

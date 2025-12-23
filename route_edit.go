@@ -22,6 +22,7 @@ type EditProps struct {
 const edit_template = `<!DOCTYPE html>
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Item Archive: Editing {{.Path}}</title>
 	<style>
 	h1, h2, h3, h4, h5, h6 {

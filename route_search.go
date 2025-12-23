@@ -28,6 +28,7 @@ type SearchProps struct {
 const search_template = `<!DOCTYPE html>
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Item Archive: Search {{.Query}}</title>
 	<style>
 	* {

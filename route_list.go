@@ -43,7 +43,7 @@ const list_template = `<!DOCTYPE html>
 	<style>
 	th, td {
 		text-align: start;
-		padding-right: 1rem;
+		padding-right: 0.5rem;
 	}
 	h1, h2, h3, h4, h5, h6 {
 		margin: 0.75rem 0rem;
@@ -84,13 +84,11 @@ const list_template = `<!DOCTYPE html>
 			<th>Comments</th>
 			<th>Image</th>
 			<th></th>
-			<th></th>
 		</thead>
 		<tbody>
 			{{if $.IsNotRoot}}
 				<tr>
 					<td><a href="..">../</a></td>
-					<td></td>
 					<td></td>
 					<td></td>
 					<td></td>
@@ -111,8 +109,7 @@ const list_template = `<!DOCTYPE html>
 						<img src="{{.ImageSrc.String}}" alt="Image of {{.Name}}">
 					{{end}}
 				</td>
-				<td><a href={{.EditHref}}>Edit</a></td>
-				<td><a href="{{.DeleteHref}}">Delete</a></td>
+				<td><a href={{.EditHref}}>Edit</a> / <a href="{{.DeleteHref}}">Delete</a></td>
 			</tr>
 			{{end}}
 		</tbody>

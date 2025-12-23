@@ -123,7 +123,7 @@ const list_template = `<!DOCTYPE html>
 		<h4>New Item</h4>
 		<div>
 			<label for="name">Name:</label>
-			<input type="text" name="name" id="name" placeholder="Resource name" required>
+			<input type="text" name="name" id="name" placeholder="Resource name">
 		</div>
 		<div>
 			<label for="color">Color:</label>
@@ -200,6 +200,32 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			imageID, err = handleImageUpload(c.blobs, image)
 			if err != nil {
 				return
+			}
+
+			if name == "" {
+				var resources []db.Resource
+				resources, err = txqry.ListResources(ctx, parentID)
+				if err != nil {
+					return
+				}
+				maxIdx := uint64(0)
+				for _, r := range resources {
+					if !strings.HasPrefix(r.Name, "Untitled") {
+						continue
+					}
+					segments := strings.Split(r.Name, " ")
+					if len(segments) != 2 {
+						continue
+					}
+					idx, err := strconv.ParseUint(segments[1], 10, 64)
+					if err != nil {
+						continue
+					}
+					if idx > uint64(maxIdx) {
+						maxIdx = idx
+					}
+				}
+				name = fmt.Sprintf("Untitled %d", maxIdx+1)
 			}
 
 			_, err = txqry.CreateResource(ctx, db.CreateResourceParams{

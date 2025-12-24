@@ -45,7 +45,8 @@ const list_template = `<!DOCTYPE html>
 		padding-right: 0.5rem;
 	}
 	h1, h2, h3, h4, h5, h6 {
-		margin: 0.75rem 0rem;
+		margin: 0;
+		margin-bottom: 0.25rem;
 	}
 	img {
 		max-width: 80px;
@@ -54,10 +55,21 @@ const list_template = `<!DOCTYPE html>
 	* {
 		box-sizing: border-box;
 	}
+
 	body {
 		margin: 0;
 		padding: 0.5rem;
+		display: grid;
+		grid-template-rows: min-content min-content min-content min-content 1fr min-content min-content;
 	}
+	hr {
+		width: 100%;
+	}
+
+	html, body {
+		height: 100%;
+	}
+
 	@media (max-width: 768px) { /* prevent zoom on text-input for mobile */
 		* {
 			touch-action: manipulation;
@@ -93,40 +105,42 @@ const list_template = `<!DOCTYPE html>
 
 	<hr>
 
-	<table>
-		<thead>
-			<th>Name</th>
-			<th>Comments</th>
-			<th>Image</th>
-			<th></th>
-		</thead>
-		<tbody>
-			{{if $.IsNotRoot}}
-				<tr>
-					<td><a href="..">../</a></td>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-			{{end}}
-			{{range .Rows}}
-			<tr>
-				{{if .IsItem}}
-					<td>{{.Name}}</td>
-				{{else}}
-					<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
+	<div style="position: relative; overflow-y: auto;">
+		<table>
+			<thead style="position: sticky; top: 0; background-color: white;">
+				<th>Name</th>
+				<th>Comments</th>
+				<th>Image</th>
+				<th></th>
+			</thead>
+			<tbody>
+				{{if $.IsNotRoot}}
+					<tr>
+						<td><a href="..">../</a></td>
+						<td></td>
+						<td></td>
+						<td></td>
+					</tr>
 				{{end}}
-				<td>{{.Comments}}</td>
-				<td>
-					{{if .ImageSrc.Valid}}
-						<img src="{{.ImageSrc.String}}" alt="Image of {{.Name}}">
+				{{range .Rows}}
+				<tr>
+					{{if .IsItem}}
+						<td>{{.Name}}</td>
+					{{else}}
+						<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
 					{{end}}
-				</td>
-				<td><a href={{.EditHref}}>Edit</a> / <a href="{{.DeleteHref}}">Delete</a></td>
-			</tr>
-			{{end}}
-		</tbody>
-	</table>
+					<td>{{.Comments}}</td>
+					<td>
+						{{if .ImageSrc.Valid}}
+							<img src="{{.ImageSrc.String}}" alt="Image of {{.Name}}">
+						{{end}}
+					</td>
+					<td><a href={{.EditHref}}>Edit</a> / <a href="{{.DeleteHref}}">Delete</a></td>
+				</tr>
+				{{end}}
+			</tbody>
+		</table>
+	</div>
 
 	<hr>
 

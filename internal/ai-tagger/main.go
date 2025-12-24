@@ -80,6 +80,9 @@ func (c tagContext) infer(content []*genai.Content) (res *genai.GenerateContentR
 }
 
 func (c tagContext) tag(r db.Resource) (err error) {
+	if !r.Image.Valid {
+		return
+	}
 	fmt.Println("tagging:", r.ID)
 
 	f, err := c.blobs.Open(db.ToUint(r.Image.Int64))

@@ -22,16 +22,21 @@ import (
 )
 
 type tagContext struct {
-	ctx     context.Context
-	driver  *sql.DB
-	qry     *db.Queries
-	client  *genai.Client
-	blobs   blob.Store
-	limiter *rate.Limiter
+	ctx           context.Context
+	driver        *sql.DB
+	qry           *db.Queries
+	client        *genai.Client
+	blobs         blob.Store
+	minuteLimiter *rate.Limiter
+	dayLimiter    *rate.Limiter
 }
 
 func (c tagContext) infer(model string, content []*genai.Content) (res *genai.GenerateContentResponse, err error) {
-	err = c.limiter.Wait(c.ctx)
+	err = c.dayLimiter.Wait(c.ctx)
+	if err != nil {
+		return
+	}
+	err = c.minuteLimiter.Wait(c.ctx)
 	if err != nil {
 		return
 	}
@@ -66,13 +71,13 @@ func (c tagContext) tag(r db.Resource) (err error) {
 		genai.NewPartFromText("Describe the subject of the image in as few words as possible. Format it as a plain-text title."),
 		genai.NewPartFromBytes(buf.Bytes(), http.DetectContentType(buf.Bytes())),
 	}
-	res, err := c.infer("gemini-2.5-flash", []*genai.Content{genai.NewContentFromParts(parts, "user")})
+	res, err := c.infer("gemini-2.5-flash-lite", []*genai.Content{genai.NewContentFromParts(parts, "user")})
 	if err != nil {
 		return
 	}
 	name := res.Text()
 
-	fmt.Println("tagged:", name)
+	fmt.Println("tagged:", name, r.ID)
 
 	err = c.qry.UpdateResource(c.ctx, db.UpdateResourceParams{
 		ID:       r.ID,
@@ -97,19 +102,29 @@ func (c tagContext) tagAll() (err error) {
 	for range runtime.NumCPU() {
 		go func() {
 			defer wg.Done()
-			for j := range jobs {
-				err := c.tag(j)
-				errMutex.Lock()
-				if err != nil {
-					log.Println("error:", err)
+			for {
+				select {
+				case <-c.ctx.Done():
+					return
+				case j := <-jobs:
+					err := c.tag(j)
+					errMutex.Lock()
+					if err != nil {
+						log.Println("error:", err)
+					}
+					errs = append(errs, err)
+					errMutex.Unlock()
 				}
-				errs = append(errs, err)
-				errMutex.Unlock()
 			}
 		}()
 	}
 	for _, r := range resources {
-		jobs <- r
+		select {
+		case <-c.ctx.Done():
+			close(jobs)
+			return errors.Join(errs...)
+		case jobs <- r:
+		}
 	}
 	close(jobs)
 	wg.Wait()
@@ -136,8 +151,14 @@ func main() {
 		qry:    qry,
 		client: client,
 		blobs:  blob.Store{Dir: "blobs"},
-		// burst 1 with max 5 requests per minute
-		limiter: rate.NewLimiter(rate.Every(time.Minute/5), 1),
+		// max 30 requests per minute (for gemini-2.5-flash-lite), burst 30 (to
+		// prevent waiting when there is still technically more tokens
+		// available)
+		minuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		// max 1500 per day (for gemini-2.5-flash-lite), burst 1500 (to
+		// prevent waiting when there is still technically more tokens
+		// available)
+		dayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/1500), 1500),
 	}
 	err = tagctx.tagAll()
 	if err != nil {

@@ -13,13 +13,11 @@ type Resource struct {
 	ParentID sql.NullInt64
 	Name     string
 	Type     string
-	Color    string
 	Comments string
 	Image    sql.NullInt64
 }
 
 type ResourceFt struct {
 	Name     string
-	Color    string
 	Comments string
 }

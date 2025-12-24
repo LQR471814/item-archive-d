@@ -21,7 +21,6 @@ type ListProps_Row struct {
 	IsItem     bool
 	Name       string
 	NameHref   string
-	Color      string
 	Comments   string
 	ImageSrc   sql.NullString
 	EditHref   string
@@ -87,7 +86,6 @@ const list_template = `<!DOCTYPE html>
 	<table>
 		<thead>
 			<th>Name</th>
-			<th>Color</th>
 			<th>Comments</th>
 			<th>Image</th>
 			<th></th>
@@ -96,7 +94,6 @@ const list_template = `<!DOCTYPE html>
 			{{if $.IsNotRoot}}
 				<tr>
 					<td><a href="..">../</a></td>
-					<td></td>
 					<td></td>
 					<td></td>
 					<td></td>
@@ -109,7 +106,6 @@ const list_template = `<!DOCTYPE html>
 				{{else}}
 					<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
 				{{end}}
-				<td>{{.Color}}</td>
 				<td>{{.Comments}}</td>
 				<td>
 					{{if .ImageSrc.Valid}}
@@ -129,10 +125,6 @@ const list_template = `<!DOCTYPE html>
 		<div>
 			<label for="name">Name:</label>
 			<input type="text" name="name" id="name" placeholder="Resource name">
-		</div>
-		<div>
-			<label for="color">Color:</label>
-			<input type="text" name="color" id="color" placeholder="Physical color">
 		</div>
 		<div>
 			<label for="comments">Comments:</label>
@@ -196,7 +188,6 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			}
 
 			name := first(r.MultipartForm.Value, "name")
-			color := first(r.MultipartForm.Value, "color")
 			resourceType := first(r.MultipartForm.Value, "type")
 			comments := first(r.MultipartForm.Value, "comments")
 			image := first(r.MultipartForm.File, "image")
@@ -236,7 +227,6 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			_, err = txqry.CreateResource(ctx, db.CreateResourceParams{
 				ParentID: parentID,
 				Name:     name,
-				Color:    color,
 				Type:     resourceType,
 				Comments: comments,
 				Image:    imageID,
@@ -261,7 +251,6 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 				// trailing slash must be included, otherwise ".." href breaks
 				NameHref:   trailingPath(path.Join(p, r.Name)),
 				IsItem:     r.Type == "item",
-				Color:      r.Color,
 				Comments:   r.Comments,
 				EditHref:   path.Join("/_edit", p, r.Name),
 				DeleteHref: path.Join("/_delete_confirm", p, r.Name),

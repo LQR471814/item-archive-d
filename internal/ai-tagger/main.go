@@ -113,7 +113,6 @@ func (c tagContext) tag(r db.Resource) (err error) {
 		ID:       r.ID,
 		Name:     name,
 		Type:     r.Type,
-		Color:    r.Color,
 		Comments: r.Comments,
 	})
 	return

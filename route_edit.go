@@ -13,7 +13,6 @@ type EditProps struct {
 	Cancel      string
 	Action      string
 	Name        string
-	Color       string
 	Comments    string
 	IsItem      bool
 	IsContainer bool
@@ -52,10 +51,6 @@ const edit_template = `<!DOCTYPE html>
 		<div>
 			<label for="name">Name:</label>
 			<input type="text" name="name" id="name" placeholder="Resource name" value="{{.Name}}" required>
-		</div>
-		<div>
-			<label for="color">Color:</label>
-			<input type="text" name="color" id="color" placeholder="Physical color" value="{{.Color}}">
 		</div>
 		<div>
 			<label for="comments">Comments:</label>
@@ -109,7 +104,6 @@ func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 			Cancel:      trailingPath(path.Join("/", path.Dir(p))),
 			Action:      path.Join("/_update", p),
 			Name:        resource.Name,
-			Color:       resource.Color,
 			Comments:    resource.Comments,
 			IsItem:      resource.Type == "item",
 			IsContainer: resource.Type == "container",
@@ -144,14 +138,12 @@ func (c Context) Update() (string, func(w http.ResponseWriter, r *http.Request))
 
 		name := first(r.MultipartForm.Value, "name")
 		resourceType := first(r.MultipartForm.Value, "type")
-		color := first(r.MultipartForm.Value, "color")
 		comments := first(r.MultipartForm.Value, "comments")
 
 		err = txqry.UpdateResource(ctx, db.UpdateResourceParams{
 			ID:       id.Int64,
 			Name:     name,
 			Type:     resourceType,
-			Color:    color,
 			Comments: comments,
 		})
 		if err != nil {

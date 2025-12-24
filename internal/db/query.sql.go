@@ -27,8 +27,8 @@ func (q *Queries) ChangeParent(ctx context.Context, arg ChangeParentParams) erro
 }
 
 const createResource = `-- name: CreateResource :one
-insert into resource (parent_id, name, type, color, comments, image)
-values (?, ?, ?, ?, ?, ?)
+insert into resource (parent_id, name, type, comments, image)
+values (?, ?, ?, ?, ?)
 returning id
 `
 
@@ -36,7 +36,6 @@ type CreateResourceParams struct {
 	ParentID sql.NullInt64
 	Name     string
 	Type     string
-	Color    string
 	Comments string
 	Image    sql.NullInt64
 }
@@ -46,7 +45,6 @@ func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) 
 		arg.ParentID,
 		arg.Name,
 		arg.Type,
-		arg.Color,
 		arg.Comments,
 		arg.Image,
 	)
@@ -66,7 +64,7 @@ func (q *Queries) DeleteResource(ctx context.Context, id int64) error {
 }
 
 const getResource = `-- name: GetResource :one
-select id, parent_id, name, type, color, comments, image from resource
+select id, parent_id, name, type, comments, image from resource
 where id = ?
 `
 
@@ -78,7 +76,6 @@ func (q *Queries) GetResource(ctx context.Context, id int64) (Resource, error) {
 		&i.ParentID,
 		&i.Name,
 		&i.Type,
-		&i.Color,
 		&i.Comments,
 		&i.Image,
 	)
@@ -86,7 +83,7 @@ func (q *Queries) GetResource(ctx context.Context, id int64) (Resource, error) {
 }
 
 const listResources = `-- name: ListResources :many
-select id, parent_id, name, type, color, comments, image from resource
+select id, parent_id, name, type, comments, image from resource
 where parent_id is ?
 `
 
@@ -104,7 +101,6 @@ func (q *Queries) ListResources(ctx context.Context, parentID sql.NullInt64) ([]
 			&i.ParentID,
 			&i.Name,
 			&i.Type,
-			&i.Color,
 			&i.Comments,
 			&i.Image,
 		); err != nil {
@@ -152,7 +148,6 @@ update resource
 set
 	name = ?,
 	type = ?,
-	color = ?,
 	comments = ?
 where id = ?
 `
@@ -160,7 +155,6 @@ where id = ?
 type UpdateResourceParams struct {
 	Name     string
 	Type     string
-	Color    string
 	Comments string
 	ID       int64
 }
@@ -169,7 +163,6 @@ func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) 
 	_, err := q.db.ExecContext(ctx, updateResource,
 		arg.Name,
 		arg.Type,
-		arg.Color,
 		arg.Comments,
 		arg.ID,
 	)

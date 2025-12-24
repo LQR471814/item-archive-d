@@ -172,7 +172,6 @@ func (q *Queries) Search(ctx context.Context, query string) ([]Resource, error) 
 			&i.ParentID,
 			&i.Name,
 			&i.Type,
-			&i.Color,
 			&i.Comments,
 			&i.Image,
 		); err != nil {

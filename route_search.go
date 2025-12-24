@@ -15,7 +15,6 @@ type SearchProps_Row struct {
 	Name       string
 	NameHref   string
 	ParentHref string
-	Color      string
 	Comments   string
 	ImageSrc   sql.NullString
 }
@@ -90,7 +89,6 @@ const search_template = `<!DOCTYPE html>
 			<thead style="position: sticky; top: 0; background: white;">
 				<th>Parent</th>
 				<th>Name</th>
-				<th>Color</th>
 				<th>Comments</th>
 				<th>Image</th>
 			</thead>
@@ -103,7 +101,6 @@ const search_template = `<!DOCTYPE html>
 					{{else}}
 						<td><a href="{{.NameHref}}">{{.Name}}/</a></td>
 					{{end}}
-					<td>{{.Color}}</td>
 					<td>{{.Comments}}</td>
 					<td>
 						{{if .ImageSrc.Valid}}
@@ -150,7 +147,6 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 				Name:       r.Name,
 				NameHref:   fullPath,
 				ParentHref: parent,
-				Color:      r.Color,
 				Comments:   r.Comments,
 			}
 			if r.Image.Valid {

@@ -1,6 +1,6 @@
 -- name: CreateResource :one
-insert into resource (parent_id, name, type, color, comments, image)
-values (?, ?, ?, ?, ?, ?)
+insert into resource (parent_id, name, type, comments, image)
+values (?, ?, ?, ?, ?)
 returning id;
 
 -- name: UpdateResource :exec
@@ -8,7 +8,6 @@ update resource
 set
 	name = ?,
 	type = ?,
-	color = ?,
 	comments = ?
 where id = ?;
 

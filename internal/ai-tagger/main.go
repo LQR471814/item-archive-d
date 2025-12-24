@@ -41,7 +41,7 @@ var (
 		DayLimiter:    rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
 	}
 	gemma_3_27b_free = Model{
-		ID:            "gemma-3-27b",
+		ID:            "gemma-3-27b-it",
 		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 30),
 		// does not cap burst since the burst pertains to the amount requested
 		// within the interval of a day/14400 parts (~6sec)

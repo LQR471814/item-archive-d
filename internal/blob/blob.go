@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 
 	"github.com/zeebo/xxh3"
 )
@@ -32,22 +31,14 @@ func (s Store) Store(blob io.Reader) (id uint64, err error) {
 	defer f.Close()
 
 	hasher := xxh3.New()
-	blob = io.TeeReader(blob, hasher)
+	tee := io.TeeReader(blob, hasher)
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		id = hasher.Sum64()
-	}()
-	go func() {
-		defer wg.Done()
-		_, err = io.Copy(f, blob)
-	}()
-	wg.Wait()
+	_, err = io.Copy(f, tee)
 	if err != nil {
 		return
 	}
+	id = hasher.Sum64()
+	f.Close()
 
 	filename := filepath.Join(s.Dir, strconv.FormatUint(id, 10))
 	err = os.Rename(tmpFilename, filename)

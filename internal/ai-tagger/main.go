@@ -100,7 +100,9 @@ func (c tagContext) tagAll() (err error) {
 			for j := range jobs {
 				err := c.tag(j)
 				errMutex.Lock()
-				log.Println("error:", err)
+				if err != nil {
+					log.Println("error:", err)
+				}
 				errs = append(errs, err)
 				errMutex.Unlock()
 			}

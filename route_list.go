@@ -52,6 +52,13 @@ const list_template = `<!DOCTYPE html>
 		max-width: 80px;
 		max-height: 150px;
 	}
+	@media (max-width: 768px) { /* prevent zoom on text-input for mobile */
+		input,
+		textarea,
+		select {
+			font-size: 16px;
+		}
+	}
 	</style>
 </head>
 

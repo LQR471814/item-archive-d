@@ -136,7 +136,10 @@ func (c tagContext) tagAll() (err error) {
 				select {
 				case <-c.ctx.Done():
 					return
-				case j := <-jobs:
+				case j, ok := <-jobs:
+					if !ok { // if channel is closed
+						return
+					}
 					err := c.tag(j)
 					if err == nil {
 						continue

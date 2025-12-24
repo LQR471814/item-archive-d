@@ -51,6 +51,13 @@ const list_template = `<!DOCTYPE html>
 		max-width: 80px;
 		max-height: 150px;
 	}
+	* {
+		box-sizing: border-box;
+	}
+	body {
+		margin: 0;
+		padding: 0.5rem;
+	}
 	@media (max-width: 768px) { /* prevent zoom on text-input for mobile */
 		* {
 			touch-action: manipulation;

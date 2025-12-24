@@ -24,6 +24,13 @@ const delete_confirm_template = `<!DOCTYPE html>
 	h1, h2, h3, h4, h5, h6 {
 		margin: 0.75rem 0rem;
 	}
+	* {
+		box-sizing: border-box;
+	}
+	body {
+		margin: 0;
+		padding: 0.5rem;
+	}
 	img {
 		max-width: 80px;
 		max-height: 150px;

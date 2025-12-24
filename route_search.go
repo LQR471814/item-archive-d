@@ -30,9 +30,6 @@ const search_template = `<!DOCTYPE html>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Item Archive: Search {{.Query}}</title>
 	<style>
-	* {
-		box-sizing: border-box;
-	}
 	th, td {
 		text-align: start;
 		padding-right: 1rem;
@@ -47,7 +44,11 @@ const search_template = `<!DOCTYPE html>
 	html, body {
 		height: 100%;
 	}
+	* {
+		box-sizing: border-box;
+	}
 	body {
+		margin: 0;
 		padding: 0.5rem;
 	}
 	.flex-horizontal {

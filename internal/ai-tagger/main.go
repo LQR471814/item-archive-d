@@ -138,10 +138,11 @@ func (c tagContext) tagAll() (err error) {
 					return
 				case j := <-jobs:
 					err := c.tag(j)
-					errMutex.Lock()
-					if err != nil {
-						log.Println("error:", err)
+					if err == nil {
+						continue
 					}
+					errMutex.Lock()
+					log.Println("error:", err)
 					errs = append(errs, err)
 					errMutex.Unlock()
 				}

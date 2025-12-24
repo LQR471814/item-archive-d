@@ -155,9 +155,8 @@ func main() {
 		// prevent waiting when there is still technically more tokens
 		// available)
 		minuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 10),
-		// max 1500 per day (for gemini-2.5-flash-lite), burst 1500 (to
-		// prevent waiting when there is still technically more tokens
-		// available)
+		// max 20 per day (for gemini-2.5-flash-lite), burst 20 (to prevent
+		// waiting when there is still technically more tokens available)
 		dayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
 	}
 	err = tagctx.tagAll()

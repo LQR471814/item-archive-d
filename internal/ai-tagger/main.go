@@ -151,14 +151,14 @@ func main() {
 		qry:    qry,
 		client: client,
 		blobs:  blob.Store{Dir: "blobs"},
-		// max 30 requests per minute (for gemini-2.5-flash-lite), burst 30 (to
+		// max 10 requests per minute (for gemini-2.5-flash-lite), burst 10 (to
 		// prevent waiting when there is still technically more tokens
 		// available)
-		minuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		minuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 10),
 		// max 1500 per day (for gemini-2.5-flash-lite), burst 1500 (to
 		// prevent waiting when there is still technically more tokens
 		// available)
-		dayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/1500), 1500),
+		dayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
 	}
 	err = tagctx.tagAll()
 	if err != nil {

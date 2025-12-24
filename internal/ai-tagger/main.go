@@ -21,28 +21,55 @@ import (
 	"google.golang.org/genai"
 )
 
-type tagContext struct {
-	ctx           context.Context
-	driver        *sql.DB
-	qry           *db.Queries
-	client        *genai.Client
-	blobs         blob.Store
-	minuteLimiter *rate.Limiter
-	dayLimiter    *rate.Limiter
+type Model struct {
+	ID            string
+	DayLimiter    *rate.Limiter
+	MinuteLimiter *rate.Limiter
 }
 
-func (c tagContext) infer(model string, content []*genai.Content) (res *genai.GenerateContentResponse, err error) {
-	err = c.dayLimiter.Wait(c.ctx)
+var (
+	gemini_2_5_flash_free = Model{
+		ID: "gemini-2.5-flash",
+		// burst = max request count so that you are not waiting for an average
+		// rate to make more requests when more requests can be made
+		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/5), 5),
+		DayLimiter:    rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
+	}
+	gemini_2_5_flash_lite_free = Model{
+		ID:            "gemini-2.5-flash-lite",
+		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 10),
+		DayLimiter:    rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
+	}
+	gemma_3_27b_free = Model{
+		ID:            "gemma-3-27b",
+		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		// does not cap burst since the burst pertains to the amount requested
+		// within the interval of a day/14400 parts (~6sec)
+		DayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/14400), 14400),
+	}
+)
+
+type tagContext struct {
+	ctx    context.Context
+	driver *sql.DB
+	qry    *db.Queries
+	client *genai.Client
+	blobs  blob.Store
+	model  Model
+}
+
+func (c tagContext) infer(content []*genai.Content) (res *genai.GenerateContentResponse, err error) {
+	err = c.model.DayLimiter.Wait(c.ctx)
 	if err != nil {
 		return
 	}
-	err = c.minuteLimiter.Wait(c.ctx)
+	err = c.model.MinuteLimiter.Wait(c.ctx)
 	if err != nil {
 		return
 	}
 	backoff := 4 * time.Second
 	for {
-		res, err = c.client.Models.GenerateContent(c.ctx, model, content, nil)
+		res, err = c.client.Models.GenerateContent(c.ctx, c.model.ID, content, nil)
 		if err == nil {
 			return
 		}
@@ -71,7 +98,7 @@ func (c tagContext) tag(r db.Resource) (err error) {
 		genai.NewPartFromText("Describe the subject of the image in as few words as possible. Format it as a plain-text title."),
 		genai.NewPartFromBytes(buf.Bytes(), http.DetectContentType(buf.Bytes())),
 	}
-	res, err := c.infer("gemini-2.5-flash-lite", []*genai.Content{genai.NewContentFromParts(parts, "user")})
+	res, err := c.infer([]*genai.Content{genai.NewContentFromParts(parts, "user")})
 	if err != nil {
 		return
 	}
@@ -151,13 +178,7 @@ func main() {
 		qry:    qry,
 		client: client,
 		blobs:  blob.Store{Dir: "blobs"},
-		// max 10 requests per minute (for gemini-2.5-flash-lite), burst 10 (to
-		// prevent waiting when there is still technically more tokens
-		// available)
-		minuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 10),
-		// max 20 per day (for gemini-2.5-flash-lite), burst 20 (to prevent
-		// waiting when there is still technically more tokens available)
-		dayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
+		model:  gemma_3_27b_free,
 	}
 	err = tagctx.tagAll()
 	if err != nil {

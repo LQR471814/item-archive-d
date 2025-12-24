@@ -60,6 +60,9 @@ const search_template = `<!DOCTYPE html>
 		gap: 0.5rem;
 	}
 	@media (max-width: 768px) { /* prevent zoom on text-input for mobile */
+		* {
+			touch-action: manipulation;
+		}
 		input,
 		textarea,
 		select {

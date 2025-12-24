@@ -32,6 +32,9 @@ const edit_template = `<!DOCTYPE html>
 		max-height: 150px;
 	}
 	@media (max-width: 768px) { /* prevent zoom on text-input for mobile */
+		* {
+			touch-action: manipulation;
+		}
 		input,
 		textarea,
 		select {

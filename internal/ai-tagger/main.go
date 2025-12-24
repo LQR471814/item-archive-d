@@ -15,16 +15,36 @@ import (
 	"os/signal"
 	"runtime"
 	"sync"
+	"time"
 
+	"golang.org/x/time/rate"
 	"google.golang.org/genai"
 )
 
 type tagContext struct {
-	ctx    context.Context
-	driver *sql.DB
-	qry    *db.Queries
-	client *genai.Client
-	blobs  blob.Store
+	ctx     context.Context
+	driver  *sql.DB
+	qry     *db.Queries
+	client  *genai.Client
+	blobs   blob.Store
+	limiter *rate.Limiter
+}
+
+func (c tagContext) infer(model string, content []*genai.Content) (res *genai.GenerateContentResponse, err error) {
+	err = c.limiter.Wait(c.ctx)
+	if err != nil {
+		return
+	}
+	backoff := 4 * time.Second
+	for {
+		res, err = c.client.Models.GenerateContent(c.ctx, model, content, nil)
+		if err == nil {
+			return
+		}
+		log.Println("gemini:", err)
+		time.Sleep(backoff)
+		backoff = min(2*backoff, 10*time.Minute)
+	}
 }
 
 func (c tagContext) tag(r db.Resource) (err error) {
@@ -46,12 +66,7 @@ func (c tagContext) tag(r db.Resource) (err error) {
 		genai.NewPartFromText("Describe the subject of the image in as few words as possible. Format it as a plain-text title."),
 		genai.NewPartFromBytes(buf.Bytes(), http.DetectContentType(buf.Bytes())),
 	}
-	res, err := c.client.Models.GenerateContent(
-		c.ctx,
-		"gemini-2.5-flash",
-		[]*genai.Content{genai.NewContentFromParts(parts, "user")},
-		nil,
-	)
+	res, err := c.infer("gemini-2.5-flash", []*genai.Content{genai.NewContentFromParts(parts, "user")})
 	if err != nil {
 		return
 	}
@@ -85,6 +100,7 @@ func (c tagContext) tagAll() (err error) {
 			for j := range jobs {
 				err := c.tag(j)
 				errMutex.Lock()
+				log.Println("error:", err)
 				errs = append(errs, err)
 				errMutex.Unlock()
 			}
@@ -118,6 +134,8 @@ func main() {
 		qry:    qry,
 		client: client,
 		blobs:  blob.Store{Dir: "blobs"},
+		// burst 1 with max 5 requests per minute
+		limiter: rate.NewLimiter(rate.Every(time.Minute/5), 1),
 	}
 	err = tagctx.tagAll()
 	if err != nil {

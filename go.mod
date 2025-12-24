@@ -4,6 +4,7 @@ go 1.25.4
 
 require (
 	github.com/zeebo/xxh3 v1.0.2
+	golang.org/x/time v0.14.0
 	google.golang.org/genai v1.40.0
 	modernc.org/sqlite v1.41.0
 )

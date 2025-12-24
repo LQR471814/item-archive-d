@@ -154,7 +154,7 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 				Comments:   r.Comments,
 			}
 			if r.Image.Valid {
-				id := strconv.FormatUint(toUint(r.Image.Int64), 10)
+				id := strconv.FormatUint(db.ToUint(r.Image.Int64), 10)
 				rows[i].ImageSrc = sql.NullString{
 					String: path.Join("/_image", id),
 					Valid:  true,

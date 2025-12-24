@@ -5,7 +5,18 @@ import (
 	"database/sql"
 	"strconv"
 	"strings"
+	"unsafe"
 )
+
+// ToUint converts an integer to a uint without changing the bytes
+func ToUint(i int64) uint64 {
+	return *(*uint64)(unsafe.Pointer(&i))
+}
+
+// ToInt converts a uint to an int without changing the bytes
+func ToInt(i uint64) int64 {
+	return *(*int64)(unsafe.Pointer(&i))
+}
 
 /*
 This query effectively works like so:

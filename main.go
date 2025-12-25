@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"time"
 )
 
@@ -23,12 +24,13 @@ type Context struct {
 
 func main() {
 	addr := flag.String("addr", ":4502", "The address to listen on.")
+	dataPath := flag.String("data", ".", "The directory in which to store item-archive data.")
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	driver, qry, err := db.Open(ctx)
+	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"))
 	if err != nil {
 		return
 	}
@@ -37,7 +39,7 @@ func main() {
 	router := Context{
 		driver: driver,
 		qry:    qry,
-		blobs:  blob.Store{Dir: "blobs"},
+		blobs:  blob.Store{Dir: filepath.Join("blobs")},
 	}
 	mux.HandleFunc(router.Search())
 	mux.HandleFunc(router.Image())

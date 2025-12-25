@@ -14,15 +14,13 @@ import (
 //go:embed schema.sql
 var schema string
 
-const state_file = "state.db"
-
-func Open(ctx context.Context) (driver *sql.DB, qry *Queries, err error) {
+func Open(ctx context.Context, path string) (driver *sql.DB, qry *Queries, err error) {
 	driver, err = sql.Open("sqlite", fmt.Sprintf(
 		"file:%s?"+
 			"_journal_mode=WAL&"+
 			"_synchronous=NORMAL&"+
 			"_busy_timeout=10000",
-		state_file,
+		path,
 	))
 	if err != nil {
 		return

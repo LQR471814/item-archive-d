@@ -200,7 +200,7 @@ const getSubtree = `with recursive
 	found as (
 		select
 			resource.id,
-			'/' || resource.name || '/' as path
+			'/' as path
 		from resource
 		where id = ?
 

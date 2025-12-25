@@ -158,16 +158,12 @@ func (c Context) MoveFinish() (string, func(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		parent := path.Dir(p)
-
 		ids := []int64{}
 		for relative := range r.Form {
 			if relative == "__to__" {
 				continue
 			}
-			fullpath := path.Join(parent, relative)
-
-			fmt.Println(fullpath, to)
+			fullpath := path.Join(p, relative)
 
 			// abort if: the destination (to) is a child of any of the
 			// resources being moved

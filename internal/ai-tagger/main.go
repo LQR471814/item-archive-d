@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"item-archive-d/internal/blob"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -165,10 +167,13 @@ func (c tagContext) tagAll() (err error) {
 }
 
 func main() {
+	dataPath := flag.String("data", ".", "The directory in which to store item-archive data.")
+	flag.Parse()
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	driver, qry, err := db.Open(ctx)
+	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -183,7 +188,7 @@ func main() {
 		driver: driver,
 		qry:    qry,
 		client: client,
-		blobs:  blob.Store{Dir: "blobs"},
+		blobs:  blob.Store{Dir: filepath.Join(*dataPath, "blobs")},
 		model:  gemma_3_27b_free,
 	}
 	err = tagctx.tagAll()

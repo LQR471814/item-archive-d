@@ -31,24 +31,21 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"))
+	migrations := ""
+	if *migrationPath != "" {
+		log.Println("using migrations:", *migrationPath)
+		migrationContents, err := os.ReadFile(*migrationPath)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		migrations = string(migrationContents)
+	}
+
+	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"), migrations)
 	if err != nil {
 		log.Println(err)
 		return
-	}
-
-	if *migrationPath != "" {
-		log.Println("running migrations:", *migrationPath)
-		migration, err := os.ReadFile(*migrationPath)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		_, err = driver.ExecContext(ctx, string(migration))
-		if err != nil {
-			log.Println(err)
-			return
-		}
 	}
 
 	mux := http.NewServeMux()

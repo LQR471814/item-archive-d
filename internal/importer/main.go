@@ -56,7 +56,7 @@ func loadDir(ctx context.Context, txqry *db.Queries, cwd string, parentId int64)
 func main() {
 	ctx := context.Background()
 
-	db, qry, err := db.Open(ctx)
+	db, qry, err := db.Open(ctx, "state.db", "")
 	if err != nil {
 		log.Fatal(err)
 	}

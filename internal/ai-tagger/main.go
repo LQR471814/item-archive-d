@@ -173,7 +173,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"))
+	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"), "")
 	if err != nil {
 		log.Fatal(err)
 	}

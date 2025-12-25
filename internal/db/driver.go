@@ -14,7 +14,7 @@ import (
 //go:embed schema.sql
 var schema string
 
-func Open(ctx context.Context, path string) (driver *sql.DB, qry *Queries, err error) {
+func Open(ctx context.Context, path, migrations string) (driver *sql.DB, qry *Queries, err error) {
 	driver, err = sql.Open("sqlite", fmt.Sprintf(
 		"file:%s?"+
 			"_journal_mode=WAL&"+
@@ -36,6 +36,14 @@ func Open(ctx context.Context, path string) (driver *sql.DB, qry *Queries, err e
 		return
 	}
 	defer tx.Rollback()
+
+	if migrations != "" {
+		_, err = tx.ExecContext(ctx, migrations)
+		if err != nil {
+			err = tx.Commit()
+			return
+		}
+	}
 
 	_, err = tx.ExecContext(ctx, schema)
 	if err == nil {

@@ -25,6 +25,7 @@ type Context struct {
 func main() {
 	addr := flag.String("addr", ":4502", "The address to listen on.")
 	dataPath := flag.String("data", ".", "The directory in which to store item-archive data.")
+	migrationPath := flag.String("migration", "", "Specify a file containing migration statements to run upon opening the database. (optional)")
 	flag.Parse()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -32,7 +33,22 @@ func main() {
 
 	driver, qry, err := db.Open(ctx, filepath.Join(*dataPath, "state.db"))
 	if err != nil {
+		log.Println(err)
 		return
+	}
+
+	if *migrationPath != "" {
+		log.Println("running migrations:", *migrationPath)
+		migration, err := os.ReadFile(*migrationPath)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = driver.ExecContext(ctx, string(migration))
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 	mux := http.NewServeMux()

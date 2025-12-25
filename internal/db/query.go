@@ -187,3 +187,122 @@ func (q *Queries) Search(ctx context.Context, query string) ([]Resource, error) 
 	}
 	return items, nil
 }
+
+/*
+we want to get a table of rows where each has one column: path of resource.
+this table of rows should be the children (infinitely deep) from a given anchor
+path
+
+we select the anchor row, set path to /
+we select the children rows, set path to anchor.path + children.name + "/"
+*/
+const getSubtree = `with recursive
+	found as (
+		select
+			resource.id,
+			'/' || resource.name || '/' as path
+		from resource
+		where id = ?
+
+		union all
+
+		select
+			resource.id,
+			found.path || resource.name || '/'
+		from resource
+		join found on
+			resource.parent_id = found.id
+	)
+select path from found`
+
+func (q *Queries) GetSubtree(ctx context.Context, id int64) (out []string, err error) {
+	rows, err := q.db.QueryContext(ctx, getSubtree, id)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p string
+		err = rows.Scan(&p)
+		if err != nil {
+			return
+		}
+		out = append(out, p)
+	}
+	return
+}
+
+const getFullTree = `with recursive
+	found as (
+		select
+			resource.id,
+			'/' || resource.name || '/' as path
+		from resource
+		where parent_id is null
+
+		union all
+
+		select
+			resource.id,
+			found.path || resource.name || '/'
+		from resource
+		join found on
+			resource.parent_id = found.id
+	)
+select path from found`
+
+func (q *Queries) GetFullTree(ctx context.Context) (out []string, err error) {
+	rows, err := q.db.QueryContext(ctx, getFullTree)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p string
+		err = rows.Scan(&p)
+		if err != nil {
+			return
+		}
+		out = append(out, p)
+	}
+	return
+}
+
+const getAllContainers = `with recursive
+	found as (
+		select
+			resource.id,
+			resource.type,
+			'/' || resource.name || '/' as path
+		from resource
+		where parent_id is null
+
+		union all
+
+		select
+			resource.id,
+			resource.type,
+			found.path || resource.name || '/'
+		from resource
+		join found on
+			resource.parent_id = found.id
+	)
+select path from found
+where type = 'container'`
+
+func (q *Queries) GetAllContainers(ctx context.Context) (out []string, err error) {
+	rows, err := q.db.QueryContext(ctx, getAllContainers)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p string
+		err = rows.Scan(&p)
+		if err != nil {
+			return
+		}
+		out = append(out, p)
+	}
+	return
+}

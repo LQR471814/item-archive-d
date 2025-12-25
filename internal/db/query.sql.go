@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 const changeParent = `-- name: ChangeParent :exec
@@ -127,19 +128,30 @@ func (q *Queries) MakeTrash(ctx context.Context) error {
 	return err
 }
 
-const moveResource = `-- name: MoveResource :exec
+const moveResources = `-- name: MoveResources :exec
 update resource
-set parent_id = ?
-where id = ?
+set parent_id = ?1
+where id in (/*SLICE:ids*/?)
 `
 
-type MoveResourceParams struct {
-	ParentID sql.NullInt64
-	ID       int64
+type MoveResourcesParams struct {
+	NewParent sql.NullInt64
+	Ids       []int64
 }
 
-func (q *Queries) MoveResource(ctx context.Context, arg MoveResourceParams) error {
-	_, err := q.db.ExecContext(ctx, moveResource, arg.ParentID, arg.ID)
+func (q *Queries) MoveResources(ctx context.Context, arg MoveResourcesParams) error {
+	query := moveResources
+	var queryParams []interface{}
+	queryParams = append(queryParams, arg.NewParent)
+	if len(arg.Ids) > 0 {
+		for _, v := range arg.Ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(arg.Ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	_, err := q.db.ExecContext(ctx, query, queryParams...)
 	return err
 }
 

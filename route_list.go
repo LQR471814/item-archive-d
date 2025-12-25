@@ -30,6 +30,7 @@ type ListProps_Row struct {
 type ListProps struct {
 	IsNotRoot    bool
 	Path         string
+	MoveHref     string
 	PathSegments []ListProps_PathSegment
 	Rows         []ListProps_Row
 }
@@ -145,7 +146,7 @@ const list_template = `<!DOCTYPE html>
 	<hr>
 
 	<form action="" method="post" enctype="multipart/form-data">
-		<h4>New Item</h4>
+		<h4>New Item / <a href="{{.MoveHref}}">Move Item</a></h4>
 		<div>
 			<label for="name">Name:</label>
 			<input type="text" name="name" id="name" placeholder="Resource name">
@@ -293,6 +294,7 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 			Path:         p,
 			PathSegments: makePathSegments(p),
 			Rows:         listRows,
+			MoveHref:     path.Join("/_move_start", p),
 		})
 		return
 	})

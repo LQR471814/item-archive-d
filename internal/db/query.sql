@@ -16,15 +16,15 @@ update resource
 set image = ?
 where id = ?;
 
--- name: MoveResource :exec
-update resource
-set parent_id = ?
-where id = ?;
-
 -- name: ChangeParent :exec
 update resource
 set parent_id = @new_parent
 where parent_id = @old_parent;
+
+-- name: MoveResources :exec
+update resource
+set parent_id = @new_parent
+where id in (sqlc.slice('ids'));
 
 -- name: ListResources :many
 select * from resource

@@ -133,7 +133,7 @@ const list_template = `<!DOCTYPE html>
 					<td>{{.Comments}}</td>
 					<td>
 						{{if .ImageSrc.Valid}}
-							<img src="{{.ImageSrc.String}}" alt="Image of {{.Name}}">
+							<img src="{{.ImageSrc.String}}" alt="Image of {{.Name}}" loading="lazy">
 						{{end}}
 					</td>
 					<td><a href={{.EditHref}}>Edit</a> / <a href="{{.DeleteHref}}">Delete</a></td>

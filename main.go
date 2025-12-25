@@ -52,7 +52,7 @@ func main() {
 	router := Context{
 		driver: driver,
 		qry:    qry,
-		blobs:  blob.Store{Dir: filepath.Join("blobs")},
+		blobs:  blob.Store{Dir: filepath.Join(*dataPath, "blobs")},
 	}
 	mux.HandleFunc(router.Search())
 	mux.HandleFunc(router.Image())

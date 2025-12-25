@@ -31,19 +31,16 @@ func Open(ctx context.Context, path, migrations string) (driver *sql.DB, qry *Qu
 	}
 	qry = New(driver)
 
+	if migrations != "" {
+		_, err = driver.ExecContext(ctx, migrations)
+		return
+	}
+
 	tx, err := driver.BeginTx(ctx, nil)
 	if err != nil {
 		return
 	}
 	defer tx.Rollback()
-
-	if migrations != "" {
-		_, err = tx.ExecContext(ctx, migrations)
-		if err != nil {
-			err = tx.Commit()
-			return
-		}
-	}
 
 	_, err = tx.ExecContext(ctx, schema)
 	if err == nil {

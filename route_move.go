@@ -57,11 +57,12 @@ const move_start_template = `<!DOCTYPE html>
 		{{end}}
 		<div>
 			<label for="to">To:</label>
-			<select name="__to__" id="to" required>
+			<input style="width: 90%" list="targets" id="to" name="__to__" placeholder="Type to search...">
+			<datalist id="targets">
 				{{range .SubtreeContainers}}
-					<option value="{{.}}">{{.}}</option>
+					<option value="{{.}}">
 				{{end}}
-			</select>
+			</datalist>
 		</div>
 		<input type="submit" value="Submit">
 	</form>

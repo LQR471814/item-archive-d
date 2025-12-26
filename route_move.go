@@ -112,20 +112,32 @@ func (c Context) MoveStart() (string, func(w http.ResponseWriter, r *http.Reques
 }
 
 func hasAncestor(ancestor, test string) bool {
-	if ancestor == "" { // root dir is parent of all (including itself)
-		return true
-	}
-	if test == "" { // root dir is child of none non-root dirs
+	ancestorSegments := strings.Split(ancestor, "/")
+	testSegments := strings.Split(test, "/")
+	i := 0
+	j := 0
+	for i < len(ancestorSegments) {
+		if j >= len(testSegments) {
+			return false
+		}
+		a := ancestorSegments[i]
+		t := testSegments[j]
+		if a == "" {
+			i++
+			continue
+		}
+		if t == "" {
+			j++
+			continue
+		}
+		if a == t {
+			i++
+			j++
+			continue
+		}
 		return false
 	}
-	// ensure any starting slashes are removed from parent and test
-	if ancestor[0] == '/' {
-		ancestor = ancestor[1:]
-	}
-	if test[0] == '/' {
-		test = test[1:]
-	}
-	return strings.HasPrefix(test, ancestor)
+	return true
 }
 
 func (c Context) MoveFinish() (string, func(w http.ResponseWriter, r *http.Request)) {

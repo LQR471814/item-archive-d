@@ -113,7 +113,7 @@ func (q *Queries) Resolve(ctx context.Context, path string) (out sql.NullInt64, 
 	return
 }
 
-const getLink = `with recursive
+const getPath = `with recursive
 	found as (
 		select
 			parent_id,
@@ -138,7 +138,7 @@ select name from found
 order by step desc`
 
 func (q *Queries) GetPath(ctx context.Context, id int64) (path []string, err error) {
-	rows, err := q.db.QueryContext(ctx, getLink, id)
+	rows, err := q.db.QueryContext(ctx, getPath, id)
 	if err != nil {
 		return
 	}

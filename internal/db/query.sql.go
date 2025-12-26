@@ -118,16 +118,6 @@ func (q *Queries) ListResources(ctx context.Context, parentID sql.NullInt64) ([]
 	return items, nil
 }
 
-const makeTrash = `-- name: MakeTrash :exec
-insert into resource (id, name, type)
-values (1, "__Trash__", "container")
-`
-
-func (q *Queries) MakeTrash(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, makeTrash)
-	return err
-}
-
 const moveResources = `-- name: MoveResources :exec
 update resource
 set parent_id = ?1

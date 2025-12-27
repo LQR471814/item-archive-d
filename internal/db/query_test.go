@@ -139,6 +139,13 @@ func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err 
 func (o oracle) changeParent(params ChangeParentParams) (err error) {
 	for _, r := range o.resources {
 		if r.ParentID == params.OldParent {
+			if params.NewParent.Valid {
+				_, ok := o.resources[params.NewParent.Int64]
+				if !ok {
+					err = fkeyErr{}
+					return
+				}
+			}
 			r.ParentID = params.NewParent
 			o.resources[r.ID] = r
 		}

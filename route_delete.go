@@ -91,8 +91,8 @@ func (c Context) DeleteShallow() (string, func(w http.ResponseWriter, r *http.Re
 			return
 		}
 		err = txqry.ChangeParent(ctx, db.ChangeParentParams{
-			NewParent: resource.ParentID,
 			OldParent: sql.NullInt64{Int64: resource.ID, Valid: true},
+			NewParent: resource.ParentID,
 		})
 		if err != nil {
 			return

@@ -38,7 +38,3 @@ where id = ?;
 delete from resource
 where id = ?;
 
--- name: MakeTrash :exec
-insert into resource (id, name, type)
-values (1, "__Trash__", "container");
-

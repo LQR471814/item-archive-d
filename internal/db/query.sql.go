@@ -14,7 +14,7 @@ import (
 const changeParent = `-- name: ChangeParent :exec
 update resource
 set parent_id = ?1
-where parent_id = ?2
+where parent_id is ?2
 `
 
 type ChangeParentParams struct {

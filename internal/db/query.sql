@@ -21,7 +21,7 @@ returning id;
 -- name: ChangeParent :exec
 update resource
 set parent_id = @new_parent
-where parent_id = @old_parent;
+where parent_id is @old_parent;
 
 -- name: MoveResources :many
 update resource

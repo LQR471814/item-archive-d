@@ -73,7 +73,7 @@ func (o oracle) createResource(r Resource) error {
 	}
 	if r.ParentID.Valid {
 		_, ok := o.resources[r.ParentID.Int64]
-		if !ok {
+		if !ok && r.ParentID.Int64 != r.ID {
 			return fkeyErr{}
 		}
 	}
@@ -284,13 +284,15 @@ func TestDB(t *testing.T) {
 				if errModel != nil {
 					if errors.Is(errModel, alreadyExistsErr{}) {
 						require.ErrorContains(t, errReal, "conflict")
+						return
 					}
 					if errors.Is(errModel, fkeyErr{}) {
 						require.ErrorContains(t, errReal, "foreign key")
+						return
 					}
 				}
 				if errReal != nil {
-					t.Fatal("(real) unexpected error: ", errReal)
+					t.Fatal("(real) unexpected error:", errReal)
 				}
 				names = append(names, name)
 
@@ -384,6 +386,7 @@ func TestDB(t *testing.T) {
 				updatedModel, errModel := model.moveResources(params)
 				if errModel != nil {
 					require.ErrorContains(t, errReal, "foreign key", "model error: %v", errModel)
+					return
 				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)
@@ -414,6 +417,7 @@ func TestDB(t *testing.T) {
 				errModel := model.changeParent(params)
 				if errModel != nil {
 					require.ErrorContains(t, errReal, "foreign key", "model error: %v", errModel)
+					return
 				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)
@@ -441,6 +445,7 @@ func TestDB(t *testing.T) {
 				foundModel, errModel := model.resolve(p)
 				if errModel != nil {
 					require.ErrorIs(t, errReal, sql.ErrNoRows, "model error: %v", errModel)
+					return
 				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)
@@ -460,6 +465,7 @@ func TestDB(t *testing.T) {
 				}
 				if errModel != nil {
 					require.ErrorIs(t, errReal, sql.ErrNoRows, "model error: %v", errModel)
+					return
 				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)

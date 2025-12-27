@@ -17,6 +17,7 @@ var schema string
 func Open(ctx context.Context, path, migrations string) (driver *sql.DB, qry *Queries, err error) {
 	driver, err = sql.Open("sqlite", fmt.Sprintf(
 		"file:%s?"+
+			"_pragma=foreign_keys(1)&"+
 			"_journal_mode=WAL&"+
 			"_synchronous=NORMAL&"+
 			"_busy_timeout=10000",

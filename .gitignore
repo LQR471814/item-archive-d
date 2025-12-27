@@ -1,6 +1,6 @@
 internal/importer/importer
 blobs/
 item-archive-d
-*.db
+*.db*
 *.sh
 

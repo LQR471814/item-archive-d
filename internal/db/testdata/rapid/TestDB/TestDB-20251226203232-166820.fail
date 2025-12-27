@@ -1,0 +1,34 @@
+# 2025/12/26 20:32:32.099289 [TestDB] [rapid] draw action: "CreateResource"
+# 2025/12/26 20:32:32.099299 [TestDB] [rapid] draw parentId: 2
+# 2025/12/26 20:32:32.099303 [TestDB] [rapid] draw name: ""
+# 2025/12/26 20:32:32.099305 [TestDB] [rapid] draw type: "container"
+# 2025/12/26 20:32:32.099307 [TestDB] [rapid] draw comments: ""
+# 2025/12/26 20:32:32.099309 [TestDB] [rapid] draw image: 0
+# 2025/12/26 20:32:32.099760 [TestDB] 
+# 	Error Trace:	/home/lqr471814/go/src/item-archive-d/internal/db/query_test.go:290
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/statemachine.go:153
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/statemachine.go:128
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/statemachine.go:61
+# 	            				/home/lqr471814/go/src/item-archive-d/internal/db/query_test.go:254
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:371
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:380
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:205
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:120
+# 	            				/home/lqr471814/go/src/item-archive-d/internal/db/query_test.go:211
+# 	Error:      	Error "constraint failed: FOREIGN KEY constraint failed (787)" does not contain "foreign key"
+# 	Test:       	TestDB
+# 
+v0.4.8#12124215745199859393
+0x1084210842108
+0x0
+0x1
+0x0
+0x1e5f75270d046
+0x2
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0

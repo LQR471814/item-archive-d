@@ -1,5 +1,3 @@
-PRAGMA foreign_keys = ON;
-
 create table resource (
 	id integer primary key autoincrement,
 	parent_id integer,

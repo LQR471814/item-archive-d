@@ -113,7 +113,11 @@ func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err 
 	if len(params.Ids) == 0 {
 		return
 	}
+	values := make(map[int64]struct{})
 	for _, id := range params.Ids {
+		values[id] = struct{}{}
+	}
+	for id := range values {
 		existing, ok := o.resources[id]
 		if !ok {
 			continue

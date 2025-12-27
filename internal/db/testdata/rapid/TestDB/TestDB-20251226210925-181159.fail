@@ -1,0 +1,34 @@
+# 2025/12/26 21:09:25.195348 [TestDB] [rapid] draw action: "CreateResource"
+# 2025/12/26 21:09:25.195370 [TestDB] [rapid] draw parentId: 1
+# 2025/12/26 21:09:25.195374 [TestDB] [rapid] draw name: ""
+# 2025/12/26 21:09:25.195376 [TestDB] [rapid] draw type: "container"
+# 2025/12/26 21:09:25.195378 [TestDB] [rapid] draw comments: ""
+# 2025/12/26 21:09:25.195380 [TestDB] [rapid] draw image: 0
+# 2025/12/26 21:09:25.288231 [TestDB] [rapid] draw action: "ChangeParent"
+# 2025/12/26 21:09:25.288236 [TestDB] [rapid] draw parentID: 1
+# 2025/12/26 21:09:25.288237 [TestDB] [rapid] draw parentID: 2
+# 2025/12/26 21:09:25.288632 [TestDB] (real) unexpected error:constraint failed: FOREIGN KEY constraint failed (787)
+# 
+v0.4.8#1778654800548221028
+0x1084210842108
+0x0
+0x1
+0x0
+0x0
+0x1
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x1084210842108
+0x0
+0x0
+0x0
+0x0
+0x1
+0x0
+0x1e5f75270d046
+0x2

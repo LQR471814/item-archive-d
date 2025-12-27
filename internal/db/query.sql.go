@@ -118,10 +118,11 @@ func (q *Queries) ListResources(ctx context.Context, parentID sql.NullInt64) ([]
 	return items, nil
 }
 
-const moveResources = `-- name: MoveResources :exec
+const moveResources = `-- name: MoveResources :many
 update resource
 set parent_id = ?1
 where id in (/*SLICE:ids*/?)
+returning id
 `
 
 type MoveResourcesParams struct {
@@ -129,7 +130,7 @@ type MoveResourcesParams struct {
 	Ids       []int64
 }
 
-func (q *Queries) MoveResources(ctx context.Context, arg MoveResourcesParams) error {
+func (q *Queries) MoveResources(ctx context.Context, arg MoveResourcesParams) ([]int64, error) {
 	query := moveResources
 	var queryParams []interface{}
 	queryParams = append(queryParams, arg.NewParent)
@@ -141,8 +142,26 @@ func (q *Queries) MoveResources(ctx context.Context, arg MoveResourcesParams) er
 	} else {
 		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
 	}
-	_, err := q.db.ExecContext(ctx, query, queryParams...)
-	return err
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateResource = `-- name: UpdateResource :exec

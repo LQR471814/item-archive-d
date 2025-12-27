@@ -21,10 +21,11 @@ update resource
 set parent_id = @new_parent
 where parent_id = @old_parent;
 
--- name: MoveResources :exec
+-- name: MoveResources :many
 update resource
 set parent_id = @new_parent
-where id in (sqlc.slice('ids'));
+where id in (sqlc.slice('ids'))
+returning id;
 
 -- name: ListResources :many
 select * from resource

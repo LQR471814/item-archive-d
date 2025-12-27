@@ -113,17 +113,17 @@ func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err 
 	if len(params.Ids) == 0 {
 		return
 	}
-	if params.NewParent.Valid {
-		_, ok := o.resources[params.NewParent.Int64]
-		if !ok {
-			err = fkeyErr{}
-			return
-		}
-	}
 	for _, id := range params.Ids {
 		existing, ok := o.resources[id]
 		if !ok {
 			continue
+		}
+		if params.NewParent.Valid {
+			_, ok = o.resources[params.NewParent.Int64]
+			if !ok {
+				err = fkeyErr{}
+				return
+			}
 		}
 		existing.ParentID = params.NewParent
 		o.resources[id] = existing
@@ -185,6 +185,9 @@ path:
 			}
 		}
 		err = doesntExistErr{}
+		return
+	}
+	if current.ID == 0 {
 		return
 	}
 	found = sql.NullInt64{Valid: true, Int64: current.ID}

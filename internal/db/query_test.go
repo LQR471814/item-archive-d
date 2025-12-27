@@ -62,23 +62,29 @@ func newOracle() oracle {
 	}
 }
 
-func (o oracle) createResource(r Resource) error {
+func (o oracle) createResource(r Resource) (err error) {
 	if r.ID == 0 {
 		r.ID = *o.count
-		*o.count++
+		defer func() {
+			if err == nil {
+				*o.count++
+			}
+		}()
 	}
 	_, ok := o.resources[r.ID]
 	if ok {
-		return alreadyExistsErr{}
+		err = alreadyExistsErr{}
+		return
 	}
 	if r.ParentID.Valid {
 		_, ok := o.resources[r.ParentID.Int64]
 		if !ok && r.ParentID.Int64 != r.ID {
-			return fkeyErr{}
+			err = fkeyErr{}
+			return
 		}
 	}
 	o.resources[r.ID] = r
-	return nil
+	return
 }
 
 func (o oracle) updateResource(r UpdateResourceParams) []int64 {
@@ -103,7 +109,17 @@ func (o oracle) updateResourceImage(r UpdateResourceImageParams) []int64 {
 	return []int64{r.ID}
 }
 
-func (o oracle) moveResources(params MoveResourcesParams) (updated []int64) {
+func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err error) {
+	if len(params.Ids) == 0 {
+		return
+	}
+	if params.NewParent.Valid {
+		_, ok := o.resources[params.NewParent.Int64]
+		if !ok {
+			err = fkeyErr{}
+			return
+		}
+	}
 	for _, id := range params.Ids {
 		existing, ok := o.resources[id]
 		if !ok {
@@ -369,9 +385,13 @@ func TestDB(t *testing.T) {
 					Ids:       ids,
 					NewParent: parentID,
 				}
-				updatedReal, err := qry.MoveResources(t.Context(), params)
-				updatedModel := model.moveResources(params)
-				if err != nil {
+				updatedReal, errReal := qry.MoveResources(t.Context(), params)
+				updatedModel, errModel := model.moveResources(params)
+				if errModel != nil {
+					require.ErrorContains(t, errReal, "FOREIGN KEY", "model error: %v", errModel)
+					return
+				}
+				if errReal != nil {
 					t.Fatal("(real) unexpected error:", err)
 				}
 				slices.Sort(updatedReal)

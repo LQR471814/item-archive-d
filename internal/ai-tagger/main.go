@@ -111,12 +111,18 @@ func (c tagContext) tag(r db.Resource) (err error) {
 
 	fmt.Println("tagged:", name, r.ID)
 
-	err = c.qry.UpdateResource(c.ctx, db.UpdateResourceParams{
+	updates, err := c.qry.UpdateResource(c.ctx, db.UpdateResourceParams{
 		ID:       r.ID,
 		Name:     name,
 		Type:     r.Type,
 		Comments: r.Comments,
 	})
+	if err != nil {
+		return
+	}
+	if len(updates) != 1 {
+		err = fmt.Errorf("failed to update resource: %d", r.ID)
+	}
 	return
 }
 

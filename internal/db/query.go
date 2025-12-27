@@ -75,7 +75,7 @@ const resolve = `with recursive
 	)
 
 select id from found
-order by current_step desc
+where current_step = /*last_step*/
 limit 1`
 
 func (q *Queries) Resolve(ctx context.Context, path string) (out sql.NullInt64, err error) {
@@ -102,6 +102,7 @@ func (q *Queries) Resolve(ctx context.Context, path string) (out sql.NullInt64, 
 	// placeholders and then use the generated placeholders to call the query
 	// to prevent sql injection from happening
 	query := strings.Replace(resolve, "/*values*/", pathArgs.String(), 1)
+	query = strings.Replace(query, "/*last_step*/", strconv.Itoa(len(args)), 1)
 
 	row := q.db.QueryRowContext(ctx, query, args...)
 	var id int64

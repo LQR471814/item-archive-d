@@ -179,7 +179,7 @@ path:
 			continue
 		}
 		for _, r := range o.resources {
-			if r.ParentID == current.ParentID && r.Name == name {
+			if r.ParentID.Int64 == current.ID && r.Name == name {
 				current = r
 				continue path
 			}

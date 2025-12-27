@@ -103,14 +103,7 @@ func (o oracle) updateResourceImage(r UpdateResourceImageParams) []int64 {
 	return []int64{r.ID}
 }
 
-func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err error) {
-	if params.NewParent.Valid {
-		_, ok := o.resources[params.NewParent.Int64]
-		if !ok {
-			err = fkeyErr{}
-			return
-		}
-	}
+func (o oracle) moveResources(params MoveResourcesParams) (updated []int64) {
 	for _, id := range params.Ids {
 		existing, ok := o.resources[id]
 		if !ok {
@@ -124,13 +117,6 @@ func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err 
 }
 
 func (o oracle) changeParent(params ChangeParentParams) (err error) {
-	if params.NewParent.Valid {
-		_, ok := o.resources[params.NewParent.Int64]
-		if !ok {
-			err = fkeyErr{}
-			return
-		}
-	}
 	for _, r := range o.resources {
 		if r.ParentID == params.OldParent {
 			r.ParentID = params.NewParent
@@ -171,6 +157,7 @@ func (o oracle) deleteResource(id int64) {
 
 func (o oracle) resolve(path string) (found sql.NullInt64, err error) {
 	var current Resource
+path:
 	for name := range strings.SplitSeq(path, "/") {
 		if name == "" {
 			continue
@@ -178,7 +165,7 @@ func (o oracle) resolve(path string) (found sql.NullInt64, err error) {
 		for _, r := range o.resources {
 			if r.ParentID == current.ParentID && r.Name == name {
 				current = r
-				break
+				continue path
 			}
 		}
 		err = doesntExistErr{}
@@ -287,7 +274,7 @@ func TestDB(t *testing.T) {
 						return
 					}
 					if errors.Is(errModel, fkeyErr{}) {
-						require.ErrorContains(t, errReal, "foreign key")
+						require.ErrorContains(t, errReal, "FOREIGN KEY")
 						return
 					}
 				}
@@ -382,14 +369,10 @@ func TestDB(t *testing.T) {
 					Ids:       ids,
 					NewParent: parentID,
 				}
-				updatedReal, errReal := qry.MoveResources(t.Context(), params)
-				updatedModel, errModel := model.moveResources(params)
-				if errModel != nil {
-					require.ErrorContains(t, errReal, "foreign key", "model error: %v", errModel)
-					return
-				}
-				if errReal != nil {
-					t.Fatal("(real) unexpected error:", errReal)
+				updatedReal, err := qry.MoveResources(t.Context(), params)
+				updatedModel := model.moveResources(params)
+				if err != nil {
+					t.Fatal("(real) unexpected error:", err)
 				}
 				slices.Sort(updatedReal)
 				slices.Sort(updatedModel)
@@ -416,7 +399,7 @@ func TestDB(t *testing.T) {
 				errReal := qry.ChangeParent(t.Context(), params)
 				errModel := model.changeParent(params)
 				if errModel != nil {
-					require.ErrorContains(t, errReal, "foreign key", "model error: %v", errModel)
+					require.ErrorContains(t, errReal, "FOREIGN KEY", "model error: %v", errModel)
 					return
 				}
 				if errReal != nil {

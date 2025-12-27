@@ -1,0 +1,48 @@
+# 2025/12/26 20:37:11.511020 [TestDB] [rapid] draw action: "CreateResource"
+# 2025/12/26 20:37:11.511030 [TestDB] [rapid] draw parentId: 0
+# 2025/12/26 20:37:11.511033 [TestDB] [rapid] draw name: "A"
+# 2025/12/26 20:37:11.511035 [TestDB] [rapid] draw type: "container"
+# 2025/12/26 20:37:11.511036 [TestDB] [rapid] draw comments: ""
+# 2025/12/26 20:37:11.511038 [TestDB] [rapid] draw image: 0
+# 2025/12/26 20:37:11.542387 [TestDB] [rapid] draw action: "Resolve"
+# 2025/12/26 20:37:11.542399 [TestDB] [rapid] draw path: []string{"A"}
+# 2025/12/26 20:37:11.542748 [TestDB] 
+# 	Error Trace:	/home/lqr471814/go/src/item-archive-d/internal/db/query_test.go:433
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/statemachine.go:153
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/statemachine.go:128
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/statemachine.go:61
+# 	            				/home/lqr471814/go/src/item-archive-d/internal/db/query_test.go:240
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:371
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:380
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:205
+# 	            				/home/lqr471814/go/pkg/mod/pgregory.net/rapid@v1.2.0/engine.go:120
+# 	            				/home/lqr471814/go/src/item-archive-d/internal/db/query_test.go:197
+# 	Error:      	Expected error with "sql: no rows in result set" in chain but got nil.
+# 	Test:       	TestDB
+# 	Messages:   	model error: row doesn't exist
+# 
+v0.4.8#14773579905739135506
+0x1084210842108
+0x0
+0x1
+0x0
+0x0
+0x0
+0x5555555555555
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0
+0x1084210842108
+0x6b74f03291620
+0x5
+0x1ba537cb45e809
+0xef90eb413e080
+0x0
+0x212fecf43689

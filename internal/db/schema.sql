@@ -1,13 +1,17 @@
+PRAGMA foreign_keys = ON;
+
 create table resource (
 	id integer primary key autoincrement,
-	parent_id integer references resource(id)
-		on update cascade
-		on delete cascade,
+	parent_id integer,
 
 	name text not null,
 	type text not null,
 	comments text not null,
-	image integer
+	image integer,
+
+	foreign key(parent_id) references resource(id)
+		on update cascade
+		on delete cascade
 );
 
 create virtual table resource_fts using fts5(

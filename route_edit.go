@@ -150,13 +150,17 @@ func (c Context) Update() (string, func(w http.ResponseWriter, r *http.Request))
 		resourceType := first(r.MultipartForm.Value, "type")
 		comments := first(r.MultipartForm.Value, "comments")
 
-		err = txqry.UpdateResource(ctx, db.UpdateResourceParams{
+		updated, err := txqry.UpdateResource(ctx, db.UpdateResourceParams{
 			ID:       id.Int64,
 			Name:     name,
 			Type:     resourceType,
 			Comments: comments,
 		})
 		if err != nil {
+			return
+		}
+		if len(updated) != 1 {
+			err = fmt.Errorf("update failed, changed: %v", updated)
 			return
 		}
 
@@ -166,11 +170,15 @@ func (c Context) Update() (string, func(w http.ResponseWriter, r *http.Request))
 			return
 		}
 		if imageID.Valid {
-			err = txqry.UpdateResourceImage(ctx, db.UpdateResourceImageParams{
+			updated, err = txqry.UpdateResourceImage(ctx, db.UpdateResourceImageParams{
 				ID:    id.Int64,
 				Image: imageID,
 			})
 			if err != nil {
+				return
+			}
+			if len(updated) != 1 {
+				err = fmt.Errorf("update failed, changed: %v", updated)
 				return
 			}
 		}

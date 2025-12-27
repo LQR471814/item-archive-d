@@ -164,13 +164,14 @@ func (q *Queries) MoveResources(ctx context.Context, arg MoveResourcesParams) ([
 	return items, nil
 }
 
-const updateResource = `-- name: UpdateResource :exec
+const updateResource = `-- name: UpdateResource :many
 update resource
 set
 	name = ?,
 	type = ?,
 	comments = ?
 where id = ?
+returning id
 `
 
 type UpdateResourceParams struct {
@@ -180,20 +181,39 @@ type UpdateResourceParams struct {
 	ID       int64
 }
 
-func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) error {
-	_, err := q.db.ExecContext(ctx, updateResource,
+func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, updateResource,
 		arg.Name,
 		arg.Type,
 		arg.Comments,
 		arg.ID,
 	)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-const updateResourceImage = `-- name: UpdateResourceImage :exec
+const updateResourceImage = `-- name: UpdateResourceImage :many
 update resource
 set image = ?
 where id = ?
+returning id
 `
 
 type UpdateResourceImageParams struct {
@@ -201,7 +221,25 @@ type UpdateResourceImageParams struct {
 	ID    int64
 }
 
-func (q *Queries) UpdateResourceImage(ctx context.Context, arg UpdateResourceImageParams) error {
-	_, err := q.db.ExecContext(ctx, updateResourceImage, arg.Image, arg.ID)
-	return err
+func (q *Queries) UpdateResourceImage(ctx context.Context, arg UpdateResourceImageParams) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, updateResourceImage, arg.Image, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

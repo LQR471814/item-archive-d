@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -42,6 +43,12 @@ func (doesntExistErr) Error() string {
 	return "row doesn't exist"
 }
 
+type fkeyErr struct{}
+
+func (fkeyErr) Error() string {
+	return "foreign key constraint violated"
+}
+
 type oracle struct {
 	resources map[int64]Resource
 	count     *int64
@@ -64,33 +71,46 @@ func (o oracle) createResource(r Resource) error {
 	if ok {
 		return alreadyExistsErr{}
 	}
+	if r.ParentID.Valid {
+		_, ok := o.resources[r.ParentID.Int64]
+		if !ok {
+			return fkeyErr{}
+		}
+	}
 	o.resources[r.ID] = r
 	return nil
 }
 
-func (o oracle) updateResource(r UpdateResourceParams) error {
+func (o oracle) updateResource(r UpdateResourceParams) []int64 {
 	existing, ok := o.resources[r.ID]
 	if !ok {
-		return doesntExistErr{}
+		return nil
 	}
 	existing.Name = r.Name
 	existing.Comments = r.Comments
 	existing.Type = r.Type
 	o.resources[r.ID] = existing
-	return nil
+	return []int64{r.ID}
 }
 
-func (o oracle) updateResourceImage(r UpdateResourceImageParams) error {
+func (o oracle) updateResourceImage(r UpdateResourceImageParams) []int64 {
 	existing, ok := o.resources[r.ID]
 	if !ok {
-		return doesntExistErr{}
+		return nil
 	}
 	existing.Image = r.Image
 	o.resources[r.ID] = existing
-	return nil
+	return []int64{r.ID}
 }
 
-func (o oracle) moveResources(params MoveResourcesParams) (updated []int64) {
+func (o oracle) moveResources(params MoveResourcesParams) (updated []int64, err error) {
+	if params.NewParent.Valid {
+		_, ok := o.resources[params.NewParent.Int64]
+		if !ok {
+			err = fkeyErr{}
+			return
+		}
+	}
 	for _, id := range params.Ids {
 		existing, ok := o.resources[id]
 		if !ok {
@@ -103,13 +123,21 @@ func (o oracle) moveResources(params MoveResourcesParams) (updated []int64) {
 	return
 }
 
-func (o oracle) changeParent(params ChangeParentParams) {
+func (o oracle) changeParent(params ChangeParentParams) (err error) {
+	if params.NewParent.Valid {
+		_, ok := o.resources[params.NewParent.Int64]
+		if !ok {
+			err = fkeyErr{}
+			return
+		}
+	}
 	for _, r := range o.resources {
 		if r.ParentID == params.OldParent {
 			r.ParentID = params.NewParent
 			o.resources[r.ID] = r
 		}
 	}
+	return
 }
 
 func (o oracle) listResources(parentId sql.NullInt64) (out []Resource) {
@@ -181,6 +209,23 @@ func (o oracle) getPath(id int64) (p []string, err error) {
 
 func TestDB(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
+		// ensure db is cleared
+		os.Remove("testing.db")
+		os.Remove("testing.db-wal")
+		os.Remove("testing.db-shm")
+		_, err := os.Stat("testing.db")
+		if err == nil {
+			t.Fatal("failed to remove testing.db")
+		}
+		_, err = os.Stat("testing.db-wal")
+		if err == nil {
+			t.Fatal("failed to remove testing.db-wal")
+		}
+		_, err = os.Stat("testing.db-shm")
+		if err == nil {
+			t.Fatal("failed to remove testing.db-shm")
+		}
+
 		_, qry, err := Open(t.Context(), "testing.db", "")
 		if err != nil {
 			t.Fatal(err)
@@ -222,25 +267,30 @@ func TestDB(t *testing.T) {
 					image.Valid = false
 				}
 
-				_, err := qry.CreateResource(t.Context(), CreateResourceParams{
+				_, errReal := qry.CreateResource(t.Context(), CreateResourceParams{
 					ParentID: parentId,
 					Name:     name,
 					Type:     typeStr,
 					Image:    image,
 					Comments: comments,
 				})
-				if err != nil {
-					t.Fatal("(real) creation should always work:", err)
+				errModel := model.createResource(Resource{
+					ParentID: parentId,
+					Name:     name,
+					Type:     typeStr,
+					Image:    image,
+					Comments: comments,
+				})
+				if errModel != nil {
+					if errors.Is(errModel, alreadyExistsErr{}) {
+						require.ErrorContains(t, errReal, "conflict")
+					}
+					if errors.Is(errModel, fkeyErr{}) {
+						require.ErrorContains(t, errReal, "foreign key")
+					}
 				}
-				err = model.createResource(Resource{
-					ParentID: parentId,
-					Name:     name,
-					Type:     typeStr,
-					Image:    image,
-					Comments: comments,
-				})
-				if err != nil {
-					t.Fatal("(model) creation should always work:", err)
+				if errReal != nil {
+					t.Fatal("(real) unexpected error: ", errReal)
 				}
 				names = append(names, name)
 
@@ -258,13 +308,17 @@ func TestDB(t *testing.T) {
 					Type:     typeStr,
 					Comments: comments,
 				}
-				errReal := qry.UpdateResource(t.Context(), params)
-				errModel := model.updateResource(params)
-				if errModel != nil {
-					require.True(t, errors.Is(errReal, sql.ErrNoRows))
+				updatedReal, err := qry.UpdateResource(t.Context(), params)
+				updatedModel := model.updateResource(params)
+				if err != nil {
+					t.Fatal("(real) unexpected error:", err)
 				}
-				if errReal != nil {
-					t.Fatal("(real) unexpected error:", errReal)
+				slices.Sort(updatedModel)
+				slices.Sort(updatedReal)
+				require.Equal(t, updatedModel, updatedReal)
+
+				if len(updatedModel) == 0 {
+					return
 				}
 
 				realResource, err := qry.GetResource(t.Context(), id)
@@ -290,13 +344,17 @@ func TestDB(t *testing.T) {
 					ID:    id,
 					Image: image,
 				}
-				errReal := qry.UpdateResourceImage(t.Context(), params)
-				errModel := model.updateResourceImage(params)
-				if errModel != nil {
-					require.True(t, errors.Is(errReal, sql.ErrNoRows))
+				updatedReal, err := qry.UpdateResourceImage(t.Context(), params)
+				updatedModel := model.updateResourceImage(params)
+				if err != nil {
+					t.Fatal("(real) unexpected error:", err)
 				}
-				if errReal != nil {
-					t.Fatal("(real) unexpected error:", errReal)
+				slices.Sort(updatedModel)
+				slices.Sort(updatedReal)
+				require.Equal(t, updatedModel, updatedReal)
+
+				if len(updatedModel) == 0 {
+					return
 				}
 
 				realResource, err := qry.GetResource(t.Context(), id)
@@ -323,7 +381,10 @@ func TestDB(t *testing.T) {
 					NewParent: parentID,
 				}
 				updatedReal, errReal := qry.MoveResources(t.Context(), params)
-				updatedModel := model.moveResources(params)
+				updatedModel, errModel := model.moveResources(params)
+				if errModel != nil {
+					require.ErrorContains(t, errReal, "foreign key", "model error: %v", errModel)
+				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)
 				}
@@ -349,11 +410,14 @@ func TestDB(t *testing.T) {
 					OldParent: parentID,
 					NewParent: newParentID,
 				}
-				err := qry.ChangeParent(t.Context(), params)
-				if err != nil {
-					t.Fatal("(real) unexpected error:", err)
+				errReal := qry.ChangeParent(t.Context(), params)
+				errModel := model.changeParent(params)
+				if errModel != nil {
+					require.ErrorContains(t, errReal, "foreign key", "model error: %v", errModel)
 				}
-				model.changeParent(params)
+				if errReal != nil {
+					t.Fatal("(real) unexpected error:", errReal)
+				}
 
 				assertResourceStateEqual(t)
 			},
@@ -376,7 +440,7 @@ func TestDB(t *testing.T) {
 				foundReal, errReal := qry.Resolve(t.Context(), p)
 				foundModel, errModel := model.resolve(p)
 				if errModel != nil {
-					require.True(t, errors.Is(errReal, sql.ErrNoRows))
+					require.ErrorIs(t, errReal, sql.ErrNoRows, "model error: %v", errModel)
 				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)
@@ -390,8 +454,12 @@ func TestDB(t *testing.T) {
 
 				pathReal, errReal := qry.GetPath(t.Context(), id)
 				pathModel, errModel := model.getPath(id)
+				if len(pathReal) == len(pathModel) && len(pathReal) == 0 {
+					assertResourceStateEqual(t)
+					return
+				}
 				if errModel != nil {
-					require.True(t, errors.Is(errReal, sql.ErrNoRows))
+					require.ErrorIs(t, errReal, sql.ErrNoRows, "model error: %v", errModel)
 				}
 				if errReal != nil {
 					t.Fatal("(real) unexpected error:", errReal)

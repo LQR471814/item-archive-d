@@ -3,18 +3,20 @@ insert into resource (parent_id, name, type, comments, image)
 values (?, ?, ?, ?, ?)
 returning id;
 
--- name: UpdateResource :exec
+-- name: UpdateResource :many
 update resource
 set
 	name = ?,
 	type = ?,
 	comments = ?
-where id = ?;
+where id = ?
+returning id;
 
--- name: UpdateResourceImage :exec
+-- name: UpdateResourceImage :many
 update resource
 set image = ?
-where id = ?;
+where id = ?
+returning id;
 
 -- name: ChangeParent :exec
 update resource

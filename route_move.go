@@ -7,6 +7,7 @@ import (
 	"item-archive-d/internal/db"
 	"net/http"
 	"path"
+	"slices"
 	"strings"
 )
 
@@ -198,11 +199,22 @@ func (c Context) MoveFinish() (string, func(w http.ResponseWriter, r *http.Reque
 			ids = append(ids, resolved.Int64)
 		}
 
-		err = txqry.MoveResources(ctx, db.MoveResourcesParams{
+		changed, err := txqry.MoveResources(ctx, db.MoveResourcesParams{
 			Ids:       ids,
 			NewParent: toId,
 		})
 		if err != nil {
+			return
+		}
+		if len(changed) != len(ids) {
+			missing := []int64{}
+			for _, id := range ids {
+				if slices.Contains(changed, id) {
+					continue
+				}
+				missing = append(missing, id)
+			}
+			err = fmt.Errorf("unknown resources: %v", missing)
 			return
 		}
 

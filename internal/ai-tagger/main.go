@@ -32,19 +32,25 @@ type Model struct {
 var (
 	gemini_2_5_flash_free = Model{
 		ID: "gemini-2.5-flash",
+		// we limit to 1 request burst to ensure that the rate limit is
+		// followed strictly
+		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/5), 1),
 		// burst = max request count so that you are not waiting for an average
 		// rate to make more requests when more requests can be made
-		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/5), 5),
-		DayLimiter:    rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
+		DayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
 	}
 	gemini_2_5_flash_lite_free = Model{
-		ID:            "gemini-2.5-flash-lite",
-		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 10),
+		ID: "gemini-2.5-flash-lite",
+		// we limit to 1 request burst to ensure that the rate limit is
+		// followed strictly
+		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 1),
 		DayLimiter:    rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
 	}
 	gemma_3_27b_free = Model{
-		ID:            "gemma-3-27b-it",
-		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		ID: "gemma-3-27b-it",
+		// we limit to 1 request burst to ensure that the rate limit is
+		// followed strictly
+		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 1),
 		// does not cap burst since the burst pertains to the amount requested
 		// within the interval of a day/14400 parts (~6sec)
 		DayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/14400), 14400),

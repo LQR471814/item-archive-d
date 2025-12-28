@@ -18,6 +18,7 @@ func Open(ctx context.Context, path, migrations string) (driver *sql.DB, qry *Qu
 	driver, err = sql.Open("sqlite", fmt.Sprintf(
 		"file:%s?"+
 			"_pragma=foreign_keys(1)&"+
+			"_txlock=immediate&"+
 			"_journal_mode=WAL&"+
 			"_busy_timeout=5000",
 		path,

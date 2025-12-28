@@ -23,9 +23,52 @@ import (
 	"google.golang.org/genai"
 )
 
+type BatchLimiter struct {
+	burst      uint64
+	interval   time.Duration
+	tokens     uint64
+	mu         sync.Mutex
+	nextRefill time.Time
+	ticker     *time.Ticker
+}
+
+func NewBatchLimiter(starting, burst uint64, interval time.Duration) *BatchLimiter {
+	limiter := &BatchLimiter{
+		interval: interval,
+		tokens:   starting,
+		burst:    burst,
+		ticker:   time.NewTicker(interval),
+	}
+	go limiter.startRefill()
+	return limiter
+}
+
+func (limiter *BatchLimiter) Wait() {
+	defer limiter.mu.Unlock()
+	limiter.mu.Lock()
+	if limiter.tokens > 0 {
+		limiter.tokens--
+		return
+	}
+	time.Sleep(limiter.nextRefill.Sub(time.Now()))
+}
+
+func (limiter *BatchLimiter) Stop() {
+	limiter.ticker.Stop()
+}
+
+func (limiter *BatchLimiter) startRefill() {
+	for range limiter.ticker.C {
+		limiter.mu.Lock()
+		limiter.tokens = limiter.burst
+		limiter.nextRefill = time.Now().Add(limiter.interval)
+		limiter.mu.Unlock()
+	}
+}
+
 type Model struct {
 	ID            string
-	DayLimiter    *rate.Limiter
+	DayLimiter    *BatchLimiter
 	MinuteLimiter *rate.Limiter
 }
 
@@ -37,14 +80,14 @@ var (
 		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/5), 1),
 		// burst = max request count so that you are not waiting for an average
 		// rate to make more requests when more requests can be made
-		DayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
+		DayLimiter: NewBatchLimiter(20, 20, time.Hour*24),
 	}
 	gemini_2_5_flash_lite_free = Model{
 		ID: "gemini-2.5-flash-lite",
 		// we limit to 1 request burst to ensure that the rate limit is
 		// followed strictly
 		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/10), 1),
-		DayLimiter:    rate.NewLimiter(rate.Every(time.Hour*24/20), 20),
+		DayLimiter:    NewBatchLimiter(20, 20, time.Hour*24),
 	}
 	gemma_3_27b_free = Model{
 		ID: "gemma-3-27b-it",
@@ -53,7 +96,7 @@ var (
 		MinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/30), 1),
 		// does not cap burst since the burst pertains to the amount requested
 		// within the interval of a day/14400 parts (~6sec)
-		DayLimiter: rate.NewLimiter(rate.Every(time.Hour*24/14400), 14400),
+		DayLimiter: NewBatchLimiter(14400, 14400, time.Hour*24),
 	}
 )
 
@@ -67,10 +110,7 @@ type tagContext struct {
 }
 
 func (c tagContext) infer(content []*genai.Content) (res *genai.GenerateContentResponse, err error) {
-	err = c.model.DayLimiter.Wait(c.ctx)
-	if err != nil {
-		return
-	}
+	c.model.DayLimiter.Wait()
 	err = c.model.MinuteLimiter.Wait(c.ctx)
 	if err != nil {
 		return

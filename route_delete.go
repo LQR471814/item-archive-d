@@ -69,7 +69,10 @@ func (c Context) DeleteConfirm() (string, func(w http.ResponseWriter, r *http.Re
 }
 
 func (c Context) DeleteShallow() (string, func(w http.ResponseWriter, r *http.Request)) {
-	return "/_delete_shallow/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_delete_shallow/{path...}", c.withTx(&sql.TxOptions{
+		// single read
+		Isolation: sql.LevelReadCommitted,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(400)
 			w.Write([]byte("unsupported method"))
@@ -108,7 +111,10 @@ func (c Context) DeleteShallow() (string, func(w http.ResponseWriter, r *http.Re
 }
 
 func (c Context) DeleteDeep() (string, func(w http.ResponseWriter, r *http.Request)) {
-	return "/_delete_deep/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_delete_deep/{path...}", c.withTx(&sql.TxOptions{
+		// single read
+		Isolation: sql.LevelReadCommitted,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(400)
 			w.Write([]byte("unsupported method"))

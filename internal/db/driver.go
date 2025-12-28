@@ -19,8 +19,7 @@ func Open(ctx context.Context, path, migrations string) (driver *sql.DB, qry *Qu
 		"file:%s?"+
 			"_pragma=foreign_keys(1)&"+
 			"_journal_mode=WAL&"+
-			"_synchronous=NORMAL&"+
-			"_busy_timeout=10000",
+			"_busy_timeout=5000",
 		path,
 	))
 	if err != nil {
@@ -37,7 +36,10 @@ func Open(ctx context.Context, path, migrations string) (driver *sql.DB, qry *Qu
 		return
 	}
 
-	tx, err := driver.BeginTx(ctx, nil)
+	tx, err := driver.BeginTx(ctx, &sql.TxOptions{
+		// no reads occur in the only statement executed
+		Isolation: sql.LevelReadUncommitted,
+	})
 	if err != nil {
 		return
 	}

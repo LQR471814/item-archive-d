@@ -193,7 +193,10 @@ func (c Context) List() (string, func(w http.ResponseWriter, r *http.Request)) {
 	if err != nil {
 		panic(err)
 	}
-	return "/", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/", c.withTx(&sql.TxOptions{
+		// single read
+		Isolation: sql.LevelReadCommitted,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		ctx := r.Context()
 		p := path.Join("/", r.URL.Path)
 

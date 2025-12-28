@@ -75,7 +75,10 @@ func (c Context) MoveStart() (string, func(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		panic(err)
 	}
-	return "/_move_start/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_move_start/{path...}", c.withTx(&sql.TxOptions{
+		// multiple reads
+		Isolation: sql.LevelSerializable,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		ctx := r.Context()
 		p := r.PathValue("path")
 
@@ -143,7 +146,10 @@ func hasAncestor(ancestor, test string) bool {
 }
 
 func (c Context) MoveFinish() (string, func(w http.ResponseWriter, r *http.Request)) {
-	return "/_move_finish/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_move_finish/{path...}", c.withTx(&sql.TxOptions{
+		// multiple reads and writes interleaved
+		Isolation: sql.LevelSerializable,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(400)
 			w.Write([]byte("unsupported method"))

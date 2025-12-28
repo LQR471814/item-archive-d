@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"item-archive-d/internal/db"
@@ -87,7 +88,9 @@ func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 	if err != nil {
 		panic(err)
 	}
-	return "/_edit/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_edit/{path...}", c.withTx(&sql.TxOptions{
+		Isolation: sql.LevelReadCommitted,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(400)
 			w.Write([]byte("unsupported method"))
@@ -123,7 +126,10 @@ func (c Context) Edit() (string, func(w http.ResponseWriter, r *http.Request)) {
 }
 
 func (c Context) Update() (string, func(w http.ResponseWriter, r *http.Request)) {
-	return "/_update/{path...}", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_update/{path...}", c.withTx(&sql.TxOptions{
+		// no reads happen in this function
+		Isolation: sql.LevelReadUncommitted,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(400)
 			w.Write([]byte("unsupported method"))

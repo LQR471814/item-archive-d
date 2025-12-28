@@ -125,7 +125,11 @@ func (c Context) Search() (string, func(w http.ResponseWriter, r *http.Request))
 	if err != nil {
 		panic(err)
 	}
-	return "/_search", c.withTx(func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
+	return "/_search", c.withTx(&sql.TxOptions{
+		// phantom reads not possible since initial search contains all results
+		// that will be searched anyway
+		Isolation: sql.LevelReadCommitted,
+	}, func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) (err error) {
 		ctx := r.Context()
 		err = r.ParseForm()
 		if err != nil {

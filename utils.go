@@ -9,10 +9,10 @@ import (
 	"net/http"
 )
 
-func (c Context) withTx(fn func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) {
+func (c Context) withTx(options *sql.TxOptions, fn func(txqry *db.Queries, w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		tx, err := c.driver.BeginTx(ctx, nil)
+		tx, err := c.driver.BeginTx(ctx, options)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

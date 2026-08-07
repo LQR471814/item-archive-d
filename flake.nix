@@ -6,31 +6,45 @@
   outputs =
     { self, nixpkgs }:
     let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      forAllSystems = nixpkgs.lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
     in
     {
-      packages.${system}.default = pkgs.buildGoModule (_: {
-        pname = "item-archive-d";
-        version = "0.1.0";
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          default = pkgs.buildGoModule (_: {
+            pname = "item-archive-d";
+            version = "0.1.0";
 
-        src = ./.;
-        vendorHash = "sha256-ir5a7cJEmIL2XorNDv+Z2zY2UInMQv1KhndDvvuV0oE=";
+            src = ./.;
+            vendorHash = "sha256-ir5a7cJEmIL2XorNDv+Z2zY2UInMQv1KhndDvvuV0oE=";
 
-        meta = {
-          description = "A web application for keeping track of everything you've archived (or shoved something somewhere).";
-          homepage = "https://github.com/LQR471814/item-archive-d";
-          license = pkgs.lib.licenses.mit;
+            meta = {
+              description = "A web application for keeping track of everything you've archived (or shoved something somewhere).";
+              homepage = "https://github.com/LQR471814/item-archive-d";
+              license = pkgs.lib.licenses.mit;
+            };
+
+            checkFlags = [
+              "-skip=^TestDB$"
+            ];
+          });
+        }
+      );
+
+      apps = forAllSystems (system: {
+        default = {
+          type = "app";
+          program = "${self.packages.${system}.default}/bin/item-archive-d";
         };
-
-        checkFlags = [
-          "-skip=^TestDB$"
-        ];
       });
-
-      apps.${system}.default = {
-        type = "app";
-        program = "${self.packages.${system}.default}/bin/item-archive-d";
-      };
     };
 }
